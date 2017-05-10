@@ -1,9 +1,10 @@
-function tru = getECG(filename)
+function trials = getECG(filename)
 
-curdir = pwd;
-datafolder = [pwd,'\dev\data\ecg\'];
-ftfolder ='C:\Users\Robert Bauer\Documents\Matlab\other_toolboxes\fieldtrip';
+curdir      = pwd;
+datafolder  = [pwd,'\data\ecg\'];
+ftfolder    ='C:\Users\Robert Bauer\Documents\Matlab\other_toolboxes\fieldtrip';
 cd(ftfolder),system('git pull');
+addpath(ftfolder);
 cd(curdir);
 ft_defaults;
 
@@ -29,7 +30,7 @@ ECG                         = data.trial{1};
 
 HeartPeaks = mspeaks(1:length(ECG),ECG(1,:).^2,'oversegmentationfilter',500);
 coi  = 3;
-tru  = [];
+trials  = [];
 for hp_idx = 1 : length(HeartPeaks)  
     toi = int32(HeartPeaks(hp_idx,1));
     toi = (toi-trange):(toi+trange);
@@ -39,5 +40,5 @@ for hp_idx = 1 : length(HeartPeaks)
     tmp = ECG(3,toi)-ECG(2,toi);
     tmp = detrend(tmp);
     tmp = tmp-mean(tmp);
-    tru = cat(1,tru,tmp);
+    trials = cat(1,trials,tmp);
 end
