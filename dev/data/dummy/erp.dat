@@ -1,0 +1,30 @@
+Multi Channel Systems MC_Stimulus II
+ASCII import Version 1.10
+
+channels: 8
+
+output mode: voltage
+
+format: 4
+
+channel: 1
+
+value	time
+0	2000
+0	2000
+2	1020
+2	980
+4	1020
+4	980
+2	140
+0	240
+-2	260
+-4	240
+-4	120
+-2	1020
+-2	980
+0	1020
+0	980
+0	2000
+0	2000
+0	100000
