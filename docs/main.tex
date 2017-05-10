@@ -56,6 +56,7 @@
 \usepackage[nonumberlist,acronym]{glossaries}
 % abbreviations:
 \newacronym{eeg}{EEG}{electroencephalogram}
+\newacronym{ecg}{ECG}{electrocardiogram}
 \newacronym{tacs}{tACS}{transcranial alternating current stimulation}
 \newacronym{tms}{TMS}{transcranial magnetic stimulation}
 \newacronym{tpca}{tPCA}{temporal principal component analysis}
@@ -171,27 +172,26 @@ One approach to tackle this problem is to use instead of a constant weight $1/N$
     \hat{a}(t) = \sum_{n=1}^{N} w_n r(t - np)\label{eq:Weighted}
 \end{equation}
 
+By controlling the parameters of the weight functions, can we attempt to match the process governing the amplitude modulation
+This might allow us to achieve a better artifact estimation and subsequent removal. Please note that if the reliability of past periods can be estimated, we might select weights empirically.~\footnote{An offline method based on estimation of reliability using the autocorrelation has been implemented in the toolbox.}
+Yet, these approaches require extended calculation periods and/or offline analysis. In the following sections, we will discuss and justify three predeterminable weighting functions feasible for fast online-filtering.
+
 \subsubsection{Justification by Sampling}
 Consider for example the simple one-step comb filter, where we remove the artifact by subtracting a value sampled from any earlier period.
 Assume now that this value were not drawn from the last period, but instead drawn at random from the last $N$ periods with uniform distribution. If the system governing amplitude modulation were fully stationary for the last $N$ periods, performance would in law be virtually identical to the comb filter based on averaging~\eqref{eq:Uniform}.
-If it were instead governed by a random process\footnote{at least for the past time-points $N$}, e.g.\ a Wiener process, the precision of the estimate would be expected to degrade as a function of the delay. This rationale justifies non-uniform weights, and to use weights that are linked to the precision of the sample.
+If it were instead non-stationary, we would expect that the precision of the estimate degrades with longer delay. For example, in the case of the uniform filter, we have a shape parameter $N$, defining how far back we trust a measurement to have the same precision as earlier samples. This rationale justifies non-uniform weights, and to use weights that are linked to the precision of the sample.
 
 \subsubsection{Justification by AR~(1) process}
 
-Consider that the system governing the amplitude of the stimulation artifact could be decomposed into the constant amplitude $c$ controlled by the stimulator and a dynamical, \emph{event-unrelated} AR~(1) process governing the amplitude modulation. This would return for $N$ approaching infinity:
+Consider that the system governing the amplitude of the stimulation artifact could be decomposed into the constant amplitude $c$ controlled by the stimulator and a dynamical, \emph{event-unrelated} process governing the amplitude modulation. If we model this process as an AR~(1) process, this would return for $N$ approaching infinity:
 
 \begin{align}
     X_{t} = c + \sum_{n=0}^{\infty} \phi_n \epsilon_{t-k}\label{eq:AR1process}
 \end{align}
+
 If the kernel $\Phi$  behind the modulation of the artifacts amplitude were known, or could be estimated sufficiently, we could construct an optimal weighting function as a deconvolution filter.
 This line of reasoning is based on the similarity between the generic weighted comb filter~\eqref{eq:Weighted} and the generic discrete-time AR~(1) process~\eqref{eq:AR1process}.
 Note that, for practical applications, we would need finite $N$. This would limit the application to kernels decaying sufficiently fast.
-
-\subsubsection{Criteria}
-
-If we do not know the generating kernel, we might select a generic weight function with well-known behavior. By controlling the parameters of weight functions, we might better match the process governing the amplitude modulation. This might allow us to achieve a better artifact estimation and subsequent removal.
-For example, in the case of the uniform filter, we have a shape parameter $N$, defining how far back we trust a measurement to have the same precision as earlier samples.
-The qualifying criteria for these weighting functions are that the sum of all their weights should be equal to one. This keeps the weighting function in agreement with the uniform comb filter~\eqref{eq:Uniform} and returns an unbiased estimate in the case of full stationarity. Additionally, it keeps the filter stable. In the following sections, we will discuss three weighting functions assuming non-skewed and unbiased generating processes.
 
 \subsection{Temporal Weighting Examples}
 
@@ -237,6 +237,11 @@ with the following generating function and normalization
     k  & = \sum_{n=1}^{N} f(n/N)\label{eq:NormGauss}
 \end{align}
 
+\subsection{Alternative Filter Approaches}
+
+\subsubsection{Adaptive Discrete Fourier Transformation}
+
+\subsubsection{Adaptive Removal of Principal Components}
 
 \section{Evaluation}
 
@@ -302,34 +307,62 @@ We find it of note that that in the limiting case of $\tau = 0$, the exponential
 Note also that very high $\tau$ would return an impulse response, and therefore just pass all signals.
 This is also  true for the limiting case of $N = 1$, were we would again acquire a simple comb filter. By increasing $N$ we achieve a flattening of the pass-band gain~\figref{fig:ExpNP50}.
 
-
-
 \subsection{Evaluation on Simulated Signals}\label{sec:EvaluationSimulated}
 
-To evaluate the filters, we tested them on simulated signals. The simulated signal was created as superposition of a 12 Hz \gls{tacs}-artifact, and an \gls{erp}.
+To evaluate the filters, we tested them on simulated signals. The simulated signal was created as superposition of a 10 Hz \gls{tacs}-artifact, and an \gls{erp}.
 
-The \gls{erp} was simulated as numerical gradient of a flat top window, with amplitude set to 2 and a duration of 50 samples.
+\begin{figure}[hbtp]
+    \begin{subfigure}{.45\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/sim_raw_1.png}
+    \end{subfigure}
+    \begin{subfigure}{.45\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/sim_raw_2.png}
+    \end{subfigure}
+    \caption{Exemplary Simulated Signal}\label{fig:SimRaw}
+\end{figure}
 
-The amplitude of the artifact was simulated as a distorted, non-stationary semi-sinusoidal.
-To achieve this, we distorted a sinusoidal by adding periodic white noise. Additionally, we had its amplitude driven by an Ornstein–Uhlenbeck, i.e. AR (1), process with mean 20, stiffness 0.5 and a variablity of 1, and an event-induced modulation with random phase and an amplitude of 1 over a Hanning window of 500 samples duration.
+The \gls{erp} was simulated as numerical gradient of a flat top window.
+The amplitude of the artifact was simulated as a distorted, non-stationary sinusoidal. The initial stimulation signal was modelled as sinusoidal signal. We distorted it by adding periodic white noise. Additionally, the stimulation amplitude was driven by an Ornstein–Uhlenbeck, i.e. AR (1), process with a stiffness 0.5, and a Hanning window time-locked to the event- related potential.
 
-In that way, we were able to simulate event-independent modulations of the artifacts amplitude, and modulations locked to an event, as described by \citep{Noury_2016}, and which have a strong potential to mask any true event-related neurophysiological activity.
-
+In that way, we were able to simulate event-independent modulations of the artifacts amplitude, and modulations locked to an event. Such effects were described by \citep{Noury_2016}, as having a strong potential to mask the true event-related neurophysiological activity.
 
 Subsequently, we explored different filter approaches, i.e.\ the two times four causal and symmetric weighted comb filters, all with a period number of 10. Additionally we evaluated adaptive discrete fourier filtering with the same period length of 10, and a linear regression of the artifact based on a copy of the efferent stimulation signal, as one could acquire from the \gls{tacs}-stimulator, e.g.\ the NeuroConn DC Plus.\footnote{Code can be found at \url{https://github.com/agricolab/ARtACS}}
 
 \begin{figure}[hbtp]
-    \includegraphics[width=\textwidth]{img/eva/recovery_erp.png}
-    \caption{KDE of R² for several filter approaches}\label{fig:EvalOnErp}
+    \includegraphics[width=\textwidth]{img/eva/sim_R2.png}
+    \caption{KDE of R² for several filter approaches}\label{fig:simR2}
 \end{figure}
 
-We simulated 500 simulated trials, calculated the r² value based on the correlation of the filtered signal with the original \gls{erp} and performed a kernel density estimation of their distribution. Figure~\figref{fig:EvalOnErp} shows the kernel density estimate of the R² between filtered and true signal for several filter approaches. Blue bars indicate the mean, and red bars a robust estimate of the mode.
+We simulated 100 trials. Based on  the correlation of the filtered, artifacted recording with the simulated underlying signal, we calculated the R² value. Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s~\figref{fig:simR2}.
 
-Visual inspection of the R² estimates shows that the \gls{erp} is actually heavily masked by the~\gls{tacs} artifact.
-Almost any filtering approach is able to recover at least some information about the~\gls{erp}. Differences between the comb filters is small, but the symmetric exponential approach seems to be superior in mode and mean R².
-The R² distributions are wide, suggesting that regardless of the filtering apporach, some trials will contain residual artifacts. Possibly, rejection based on visual inspection can improve the mean R².
+Visual inspection of the R² estimates shows that all filtering approaches are able to recover at least some information about the~\gls{erp}. Differences between the comb filters is small.
 
 \subsection{Evaluation on real data}\label{sec:EvaluationData}
+
+To evaluate the filters, we tested them on real physiological signals. Consider that~\gls{tacs} can have physiological effects on cortical~\gls{erp}. To properly evaluate the recovery using the filtering approaches, we need a physiological signal which is unlikely to be affected by~\gls{tacs}.
+
+We therefore measured~\gls{ecg} close to the flexor digitorum of the left upper limb, while we stimulated distal and proximal with~\gls{tacs} to the muscle belly with 11 Hz at 1 mA. We also recorded~\gls{ecg} at the chest, and detected the R-peak for epoching the data. Please note that no~\gls{tacs}-artifact was visible in the chest~\gls{ecg}.
+Physiological signals were acquired using BrainProducts amplifiers at a sampling rate of 1 kHz and low-pass filtered below 35 Hz. Stimulation as delivered using a NeuroConn DC Stimulator Plus with carbon rubber electrodes and Ten20 electrode gel.
+
+\begin{figure}[hbtp]
+    \begin{subfigure}{.45\textwidth}
+        \includegraphics[width=\textwidth]{./img/div/upper_limb_ecg.jpg}
+    \end{subfigure}
+    \begin{subfigure}{.45\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/ecg_raw_1.png}\\
+        \includegraphics[width=\textwidth]{./img/eva/ecg_raw_2.png}
+    \end{subfigure}
+    \caption{Upper Limb Electrocardiogram recording}\label{fig:ecgRaw}
+\end{figure}
+
+
+
+\begin{figure}[hbtp]
+    \includegraphics[width=\textwidth]{img/eva/ecg_R2.png}
+    \caption{KDE of R² for several filter approaches}\label{fig:ecgR2}
+\end{figure}
+
+We recorded a total of 134 R-peaks without stimulation and 136 wiht stimulation. Based on  the correlation of the filtered, artifacted recordings with the grand-average of the stimulation-free signal, we calculated the R² value. Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s based on 100 epochs~\figref{fig:ecgR2}.
 
 \section{Conclusion}
 

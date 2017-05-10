@@ -81,6 +81,31 @@ lh = legend([h1,h2],'Artifacted Recording','Stim-free Comparison');
 set(lh,'position',[0.8 .85 .08 .08])
 print(gcf,[printfolder,'eva\ecg_raw.png'],'-dpng')
 
+close all
+figure
+set(gcf,'Position',[100 100 500 200],'paperpositionmode','auto')
+hold on
+h1 = plot(stim_trials(1,toi),'color',[.8 .8 .8],'linewidth',2);
+h2 = plot(mean(clean_trials(:,toi),1),'color',red);
+set(gca,'xlim',[1 length(toi)],'xtick',[1:50:4000],'xticklabel',[(-length(toi)/2+1):50:length(toi)/2])
+set(gca,'ylim',[-20000 20000],'ytick',[-20000,-10000,0,10000,20000],'yticklabel',[-20,10,0,10,20])
+ylabel('mV')
+xlabel('ms')
+print(gcf,[printfolder,'eva\ecg_raw_1.png'],'-dpng')
+
+figure
+set(gcf,'Position',[100 100 500 200],'paperpositionmode','auto')
+hold on
+h1 = plot(stim_trials(1,toi),'color',[.8 .8 .8],'linewidth',2);
+h2 = plot(mean(clean_trials(:,toi),1),'color',red);
+set(gca,'xlim',[1 length(toi)],'xtick',[1:50:4000],'xticklabel',[(-length(toi)/2+1):50:length(toi)/2])
+set(gca,'ylim',[-20 20],'ytick',[-1000:10:1000])
+ylabel('µV')
+xlabel('ms')
+lh = legend([h1,h2],'Artifacted Recording','Stim-free Comparison');
+set(lh,'position',[0.8 .85 .08 .08])
+print(gcf,[printfolder,'eva\ecg_raw_2.png'],'-dpng')
+
 
 
 R               = [];    
@@ -363,45 +388,53 @@ end
 setup           = generate.generic();  
 [r,e,t]         = generate.recording(setup);
 
-clear f
-np = 10;
-f(1,:)       = artacs.kernel.runpredefined(r,artacs.kernel.symmetric(np,10,1000,'exp'));
-f(2,:)       = artacs.kernel.runpredefined(r,artacs.kernel.causal(np,10,1000,'ave'));
-f(3,:)       = artacs.dft.complete(r,10,1000);
-
-tit_set = {'Symmetric Gaussian','Causal Uniform','Adaptive DFT'};
 close all
 figure
-set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
+set(gcf,'Position',[100 100 500 400],'paperpositionmode','auto')
+subplot(2,1,1)
 hold on
-h1 = plot(t,'color',[.8 .8 .8],'linewidth',2);
-h2 = plot(r,'k');
-h3 = plot(e(1,:),'r');
-set(gca,'xlim',[1501,2501],'xtick',[1:250:4000],'xticklabel',[-2000:250:2000])
-set(gca,'ylim',[-22 22])
-lh = legend([h1,h2,h3],'Applied tACS','Recording','True Signal');
-set(lh,'position',[0.15 .85 .08 .08])
-print(gcf,[printfolder,'eva\three_approaches_raw.png'],'-dpng')
+h1 = plot(r,'color',[.8 .8 .8],'linewidth',2);
+h2 = plot(e(1,:),'color',red);
+set(gca,'xlim',[3751,4251],'xtick',[0:50:8000],'xticklabel',[-4000:50:4000])
+set(gca,'ylim',[-21000 21000],'ytick',[-20000:10000:20000],'yticklabel',[-20:10:20])
+ylabel('mV')
+subplot(2,1,2)
+hold on
+h1 = plot(r,'color',[.8 .8 .8],'linewidth',2);
+h2 = plot(e(1,:),'color',red);
+set(gca,'xlim',[3751,4251],'xtick',[0:50:8000],'xticklabel',[-4000:50:4000])
+set(gca,'ylim',[-3 3],'ytick',[-4:4])
+ylabel('µV')
+xlabel('ms')
+lh = legend([h1,h2],'Recording','Signal');
+set(lh,'position',[0.8 .85 .08 .08])
+print(gcf,['.\repo\img\exemplary_generic.png'],'-dpng')
+
 
 figure
-set(gcf,'Position',[100 100 1200 300],'paperpositionmode','auto')
-for k=1:3
-    subplot(1,3,k)
-    hold on
-    h2 = plot(e(1,:),'color',[.8 .8 .8],'linewidth',2);
-    h1 = plot(f(k,:),'b','linewidth',1);      
-    set(gca,'xlim',[1901,2101],'xtick',[1:25:4000],'xticklabel',[-2000:25:2000])
-    set(gca,'ylim',[-4 4])
+set(gcf,'Position',[100 100 500 200],'paperpositionmode','auto')
+hold on
+h1 = plot(r,'color',[.8 .8 .8],'linewidth',2);
+h2 = plot(e(1,:),'color',red);
+set(gca,'xlim',[3751,4251],'xtick',[0:50:8000],'xticklabel',[-4000:50:4000])
+set(gca,'ylim',[-21000 21000],'ytick',[-20000:10000:20000],'yticklabel',[-20:10:20])
+ylabel('mV')
+xlabel('ms')
+print(gcf,[printfolder,'eva\sim_raw_1'],'-dpng')
 
-    title(tit_set{k})
-end
-lh = legend([h2,h1],'True Signal','Recovered Signal');
-set(lh,'position',[0.1 .8 .08 .08])
-print(gcf,[printfolder,'eva\three_approaches.png'],'-dpng')
+figure
+set(gcf,'Position',[100 100 500 200],'paperpositionmode','auto')
+hold on
+h1 = plot(r,'color',[.8 .8 .8],'linewidth',2);
+h2 = plot(e(1,:),'color',red);
+set(gca,'xlim',[3751,4251],'xtick',[0:50:8000],'xticklabel',[-4000:50:4000])
+set(gca,'ylim',[-3 3],'ytick',[-4:4])
+ylabel('µV')
+xlabel('ms')
+lh = legend([h1,h2],'Recording','Signal');
+set(lh,'position',[0.8 .85 .08 .08])
+print(gcf,[printfolder,'eva\sim_raw_2'],'-dpng')
 %%
-
-
-
 
 R               = [];    
 F               = [];
@@ -412,7 +445,7 @@ NumberPeriods   = 10;
 E               = e(1,:);
 
 for trl_idx = 1 : 100
-    r           = generate.recording('generic');
+    r                                       = generate.recording('generic');
     f                                       = artacs.kernel.run(r,NumberPeriods,tacsFreq,Fs,'causal','uniform','default','default');
     [R(1,trl_idx),F(1,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
 
@@ -447,9 +480,7 @@ for fidx = 1 : size(F,1)
     set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
     hold on
     
-    [h,p,ci] = ttest(squeeze(F(end,:,toi)));                
-    h3 = patch([1:length(ci),length(ci):-1:1],[ci(1,:),fliplr(ci(2,:))],ones(1,length(ci)*2),'facecolor',red,'facealpha',0.25,'edgecolor',red,'edgealpha',0.1);                
-    h1 = plot(mean(ci),'linewidth',1,'color',red);
+    h1 = plot(E(toi),'linewidth',1,'color',red);
     h2 = plot(squeeze(Efun(F(fidx,:,toi),2))','linewidth',2,'color',blue);
     set(gca,'xlim',[1 length(toi)],'xtick',[1:50:4000],'xticklabel',[(-length(toi)/2+1):50:length(toi)/2])
     set(gca,'ylim',[-3 3],'ytick',[-3:1:3])
