@@ -52,7 +52,8 @@
 \usepackage{hyperref}
 \usepackage{cleveref}
 \hypersetup{hidelinks = true}
-
+\usepackage{listings}
+\usepackage{Matlab-prettifier}
 \usepackage[nonumberlist,acronym]{glossaries}
 % abbreviations:
 \newacronym{eeg}{EEG}{electroencephalogram}
@@ -312,14 +313,26 @@ This is also  true for the limiting case of $N = 1$, were we would again acquire
 To evaluate the filters, we tested them on simulated signals. The simulated signal was created as superposition of a 10 Hz \gls{tacs}-artifact, and an \gls{erp}.
 
 \begin{figure}[hbtp]
-    \begin{subfigure}{.45\textwidth}
-        \includegraphics[width=\textwidth]{./img/eva/sim_raw_1.png}
+    \begin{subfigure}{0.245\textwidth}
+        \includegraphics[width=\textwidth]{./img/div/desktop_computer.png}
+        \caption{Experimental Setup}
     \end{subfigure}
-    \begin{subfigure}{.45\textwidth}
-        \includegraphics[width=\textwidth]{./img/eva/sim_raw_2.png}
+    \begin{subfigure}{0.75\textwidth}
+        \begin{subfigure}{.45\textwidth}
+            \includegraphics[width=\textwidth]{./img/eva/sim_raw_1.png}
+        \end{subfigure}
+        \begin{subfigure}{.45\textwidth}
+            \includegraphics[width=\textwidth]{./img/eva/sim_raw_2.png}
+        \end{subfigure}
+    \caption{Signal Comparison}\label{fig:simRaw}
     \end{subfigure}
-    \caption{Exemplary Simulated Signal}\label{fig:SimRaw}
+    \begin{subfigure}{1.0\textwidth}
+        \includegraphics[width=\textwidth]{img/eva/sim_R2.png}
+        \caption{Kernel Density Estimation of R² for different filter approaches}\label{fig:simR2}
+    \end{subfigure}
+    \caption{Overview for Artifact Removal from  Simulated Signal}
 \end{figure}
+
 
 The \gls{erp} was simulated as numerical gradient of a flat top window.
 The amplitude of the artifact was simulated as a distorted, non-stationary sinusoidal. The initial stimulation signal was modelled as sinusoidal signal. We distorted it by adding periodic white noise. Additionally, the stimulation amplitude was driven by an Ornstein–Uhlenbeck, i.e. AR (1), process with a stiffness 0.5, and a Hanning window time-locked to the event- related potential.
@@ -327,11 +340,6 @@ The amplitude of the artifact was simulated as a distorted, non-stationary sinus
 In that way, we were able to simulate event-independent modulations of the artifacts amplitude, and modulations locked to an event. Such effects were described by \citep{Noury_2016}, as having a strong potential to mask the true event-related neurophysiological activity.
 
 Subsequently, we explored different filter approaches, i.e.\ the two times four causal and symmetric weighted comb filters, all with a period number of 10. Additionally we evaluated adaptive discrete fourier filtering with the same period length of 10, and a linear regression of the artifact based on a copy of the efferent stimulation signal, as one could acquire from the \gls{tacs}-stimulator, e.g.\ the NeuroConn DC Plus.\footnote{Code can be found at \url{https://github.com/agricolab/ARtACS}}
-
-\begin{figure}[hbtp]
-    \includegraphics[width=\textwidth]{img/eva/sim_R2.png}
-    \caption{KDE of R² for several filter approaches}\label{fig:simR2}
-\end{figure}
 
 We simulated 100 trials. Based on  the correlation of the filtered, artifacted recording with the simulated underlying signal, we calculated the R² value. Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s~\figref{fig:simR2}.
 
@@ -345,24 +353,27 @@ We therefore measured~\gls{ecg} close to the flexor digitorum of the left upper 
 Physiological signals were acquired using BrainProducts amplifiers at a sampling rate of 1 kHz and low-pass filtered below 35 Hz. Stimulation as delivered using a NeuroConn DC Stimulator Plus with carbon rubber electrodes and Ten20 electrode gel.
 
 \begin{figure}[hbtp]
-    \begin{subfigure}{.45\textwidth}
+    \begin{subfigure}{.245\textwidth}
         \includegraphics[width=\textwidth]{./img/div/upper_limb_ecg.jpg}
+    \caption{Experimental Setup}
     \end{subfigure}
-    \begin{subfigure}{.45\textwidth}
-        \includegraphics[width=\textwidth]{./img/eva/ecg_raw_1.png}\\
-        \includegraphics[width=\textwidth]{./img/eva/ecg_raw_2.png}
+    \begin{subfigure}{.75\textwidth}
+        \begin{subfigure}{.45\textwidth}
+            \includegraphics[width=\textwidth]{./img/eva/ecg_raw_1.png}
+        \end{subfigure}
+        \begin{subfigure}{.45\textwidth}
+            \includegraphics[width=\textwidth]{./img/eva/ecg_raw_2.png}
+        \end{subfigure}
+    \caption{Signal Comparison}\label{fig:ecgRaw}
     \end{subfigure}
-    \caption{Upper Limb Electrocardiogram recording}\label{fig:ecgRaw}
+    \begin{subfigure}{1.0\textwidth}
+        \includegraphics[width=\textwidth]{img/eva/ecg_R2.png}
+        \caption{Kernel Density Estimation of R² for different filter approaches}\label{fig:ecgR2}
+    \end{subfigure}
+    \caption{Overview for Artifact Removal from Upper Limb Electrocardiogram}
 \end{figure}
 
-
-
-\begin{figure}[hbtp]
-    \includegraphics[width=\textwidth]{img/eva/ecg_R2.png}
-    \caption{KDE of R² for several filter approaches}\label{fig:ecgR2}
-\end{figure}
-
-We recorded a total of 134 R-peaks without stimulation and 136 wiht stimulation. Based on  the correlation of the filtered, artifacted recordings with the grand-average of the stimulation-free signal, we calculated the R² value. Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s based on 100 epochs~\figref{fig:ecgR2}.
+We recorded a total of 134 R-peaks without stimulation and 136 with stimulation. Based on  the correlation of the filtered, artifacted recordings with the grand-average of the stimulation-free signal, we calculated the R² value. Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s based on 100 epochs~\figref{fig:ecgR2}.
 
 \section{Conclusion}
 
