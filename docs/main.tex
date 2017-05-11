@@ -78,19 +78,14 @@ Your abstract.
 
 The combination of \gls{tacs} and \gls{eeg} has been explored in several recent studies. While the analysis of \gls{eeg} before or after stimulation posits limited technical challenges, the \gls{eeg} recording during stimulation is heavily affected by the stimulation artifact.
 
-\subsection{Matched Phase and Frequency}
-Computational simulations suggest that the power of endogenous oscillations would increase most if the frequency of~\gls{tacs} matches the targets eigenfrequency~\citep{Kutchko_2013,Zaehle_2010}.
-This has been supported by evidence from animal studies~\citep{Schmidt_2014}, and human studies combining \gls{tacs} with \gls{tms} \citep{Guerra_2016}, or contrasting pre and post resting state power analysis \citep{Zaehle_2010}.
-It has also been suggested that the phase of neuronal populations would be locked to the phase of the \gls{tacs} signal \citep{Reato_2013}. This has been supported by evidence from studies combining \gls{tacs} with motor output \citep{Brittain_2013}, \gls{tms}~\citep{Raco_2016,Nakazono_2016} or sensory perception~\citep{Gundlach_2016}.
-
-This suggests that the effect of \gls{tacs} can result in neurophysiological effects which are phase-and frequency-matched to the stimulation artifact. Such frequency and phase matching between \gls{tacs} and \gls{eeg} recordings can render the removal of the artifact difficult or impossible, as the signal might no longer be separatable from the artifact.
-
 \subsection{Non-Stationary Amplitude Modulation}
 
-An approach to tackle this issue is to assess the time-course of the~\gls{eeg} signal. Consider the assumption that the artifact is stationary and superpositioned on the physiological signal. Then, modulations in the amplitude of the recorded~\gls{eeg}-signal must be caused by changes in the underlying physiology.
+An approach to tackle this issue is to assess the time-course of the~\gls{eeg} signal. Consider the assumption that the artifact is stationary and superpositioned on the physiological signal.
+Then, modulations in the amplitude of the recorded~\gls{eeg}-signal must be caused by changes in the underlying physiology.
 This would be the case, even if frequency and phase are matched to the stimulation signal. Approaches assuming such stationarity of the stimulation artifact have been used e.g.\ by~\cite{Pogosyan_2009}.
 
-Yet, detailed analysis of the stimulation artifact provides evidence that the artifact amplitude is actually not stationary. Instead, the amplitude is modulated by heart-beat and respiration~\citep{Noury_2016}. Recently, non-linearities in how stimulators control the applied current has been suggest as further source of modulation~\citep{Neuling_2017}.
+Yet, detailed analysis of the stimulation artifact provides evidence that the artifact amplitude is actually not stationary. Instead, the amplitude is modulated by heart-beat and respiration~\citep{Noury_2016}.
+Recently, non-linearities in how stimulators control the applied current has been suggest as further source of modulation~\citep{Neuling_2017}.
 It has been argued that unregularized spatial filters might be able to remove this amplitude modulation~\citep{Neuling_2017}. But if only few channels are recorded, the method can fail, as the estimation of the spatial covariance is insufficient, or impossible in the single-channel-case.
 Consider furthermore that event-related responses like modulation of skin impedance can also affect the scalp conductance at stimulation electrodes. This would introduce event-related amplitude modulation of the stimulation artifact. In that regard, disentangling true signal from the stimulation artifact stays technically challenging.
 
@@ -111,17 +106,21 @@ Figure~\ref{fig:nonsinus} shows examples of distortion and saturation in two rec
     \caption{Examples for loss of sinusoidal fidelity}\label{fig:nonsinus}
 \end{figure}
 
-The temporally and spatially uneven impedance distribution has been suggested as cause of distortion, rendering the resulting waveform periodic, but non-sinusoidal. A major problem is amplifier saturation, i.e.\ the stimulation artifact exhibiting an amplitude to large for the dynamic range of the amplifier, causing the signal to be cut off and information to be lost.
+The temporally and spatially uneven impedance distribution has been suggested as cause of distortion, rendering the resulting waveform periodic, but non-sinusoidal.
+A major problem is amplifier saturation, i.e.\ the stimulation artifact exhibiting an amplitude to large for the dynamic range of the amplifier, causing the signal to be cut off and information to be lost.
 Additionally, non-linearites in the amplifier slew rate can distort the shape even when the signal is close to the saturation threshold.
 
 \subsection{Computational Demands}
 
-Methods based on adaptive template construction and \gls{tpca}~\citep{Niazy_2005} have been explored for removal of  non-stationary and misshaped \gls{tacs} artifacts~\citep{Helfrich_2014}.  Consider that the process of template construction, the estimation of accurate weights for removal by template subtraction and the suqsequent removal of residual artifacts using \gls{tpca} is computationally cumbersome. Additionally, it often requires off-line analysis supported by visual inspection.
+Methods based on adaptive template construction and \gls{tpca}~\citep{Niazy_2005} have been explored for removal of  non-stationary and misshaped \gls{tacs} artifacts~\citep{Helfrich_2014}.
+Consider that the process of template construction, the estimation of accurate weights for removal by template subtraction and the suqsequent removal of residual artifacts using \gls{tpca} is computationally cumbersome. Additionally, it often requires off-line analysis supported by visual inspection.
 Such a multi-staged template-approach is therefore of limited utility for on-line artifact removal. Furthermore, critical evaluation has suggested that the residual artifact spans several principal components, and a sufficient artifact removal is therefore not possible with \gls{tpca} \citep{Noury_2016}.
 
 \subsection{Motivation}
 
-We were interested in development of a computationally fast approach, feasible for online artifact removal. At the same time, the approach was required to account for the dynamical modulation of the artifact amplitude, and the possibility of non-sinusoidal distortion and saturation. Ideally, the approach would allow to derive physiological signals at the frequency of stimulation, even if physiological oscillations were phase-locked to the stimulation signal.
+We were interested in development of a computationally fast approach, feasible for online artifact removal.
+At the same time, the approach was required to account for the dynamical modulation of the artifact amplitude, and the possibility of non-sinusoidal distortion and saturation.
+Ideally, the approach would allow to derive physiological signals at the frequency of stimulation, even if physiological oscillations were phase-locked to the stimulation signal.
 Furthermore, the approach should be usable offline, as to allow recovery of information from already collected datasets.
 
 \section{Approach}
@@ -174,12 +173,13 @@ One approach to tackle this problem is to use instead of a constant weight $1/N$
 \end{equation}
 
 By controlling the parameters of the weight functions, can we attempt to match the process governing the amplitude modulation
-This might allow us to achieve a better artifact estimation and subsequent removal. Please note that if the reliability of past periods can be estimated, we might select weights empirically.~\footnote{An offline method based on estimation of reliability using the autocorrelation has been implemented in the toolbox.}
+This might allow us to achieve a better artifact estimation and subsequent removal. Please note that if the reliability of past periods can be estimated, we might select weights empirically.~\ref{sec:adaptivePCA}
 Yet, these approaches require extended calculation periods and/or offline analysis. In the following sections, we will discuss and justify three predeterminable weighting functions feasible for fast online-filtering.
 
 \subsubsection{Justification by Sampling}
 Consider for example the simple one-step comb filter, where we remove the artifact by subtracting a value sampled from any earlier period.
-Assume now that this value were not drawn from the last period, but instead drawn at random from the last $N$ periods with uniform distribution. If the system governing amplitude modulation were fully stationary for the last $N$ periods, performance would in law be virtually identical to the comb filter based on averaging~\eqref{eq:Uniform}.
+Assume now that this value were not drawn from the last period, but instead drawn at random from the last $N$ periods with uniform distribution.
+If the system governing amplitude modulation were fully stationary for the last $N$ periods, performance would in law be virtually identical to the comb filter based on averaging~\eqref{eq:Uniform}.
 If it were instead non-stationary, we would expect that the precision of the estimate degrades with longer delay. For example, in the case of the uniform filter, we have a shape parameter $N$, defining how far back we trust a measurement to have the same precision as earlier samples. This rationale justifies non-uniform weights, and to use weights that are linked to the precision of the sample.
 
 \subsubsection{Justification by AR~(1) process}
@@ -212,7 +212,8 @@ with the following normalization
 
 \subsubsection{Exponential Weighting}
 
-Motivated by the fact that the autocorrelation function of an AR~(1) process can be expressed as a decaying exponential, an alternative approach would be an exponential weighting function. The time constant $\tau$ of an exponential controls its temporal decay. To maintain the shape across different $N$, we consider it reasonable to normalize $n$ by $N$. Hence, equation~\eqref{eq:Exp} returns weights for earlier periods based on their exponential temporal weight decay.
+Motivated by the fact that the autocorrelation function of an AR~(1) process can be expressed as a decaying exponential, an alternative approach would be an exponential weighting function.
+The time constant $\tau$ of an exponential controls its temporal decay. To maintain the shape across different $N$, we consider it reasonable to normalize $n$ by $N$. Hence, equation~\eqref{eq:Exp} returns weights for earlier periods based on their exponential temporal weight decay.
 
 \begin{equation}
     w_n = \frac{1}{k} e^{\tau-\tau{(n/N)}}\label{eq:Exp}
@@ -240,13 +241,32 @@ with the following generating function and normalization
 
 \subsection{Alternative Filter Approaches}
 
-\subsubsection{Adaptive Discrete Fourier Transformation}
+Besides the discussed real-valued causal comb filters, several other approaches for filtering the~\gls{tacs}-artifact are possible. For example, one could estimate the weight at each period delay by calculating the autocorrelation~\ref{sec:automaticKernel}, remove periodic principial components~\ref{sec:adaptivePCA}, or use complex-valued kernels~\ref{sec:causalDFT}.
 
-\subsubsection{Adaptive Removal of Principal Components}
+Consider that these approaches are either computationally more complex~\ref{sec:automaticKernel}, work primarily offline~\ref{sec:adaptivePCA} or assume sinusoidality of the artifact~\ref{sec:causalDFT},the causal methods presented here are conceptually simpler.
+
+\subsubsection{Automatic Weight Estimation}\label{sec:automaticKernel}
+
+By cutting a trial into epochs of period length, we can estimate the average autocorrelation for each phase across different (period length) lags. Because this measure is a direct indicator of the reliability of earlier measurements for estimating the current artifact amplitude, we can use it to derive empirical kernel weights.
+
+\subsubsection{Causal Discrete Fourier Transformation}\label{sec:causalDFT}
+
+To get hold of the artifacts no-stationarity, we might also approach by iteratively estimating for each time point the artifact power at the frequency of~\gls{tacs}, e.g.\ by using a discrete fourier transformation with a window over a certain number of period periods, and use that for scaling the artifact template to be removed.
+The estimation-removal-process can be understood as convolution of the recording with a complex kernel at the artifacts frequency and subsequent subtraction.
+While it has the advantage that it supports natively frequencies which are not integer divisibles of the sampling frequency, we need to assume sinusoidality of the artifact. Additionally, to remove the artifact at harmonic frequencies, the computation has to be performed several times.
+Whether this approach is sufficient, will depende on whether the artifact can be sufficiently catched by these few frequencies.
+
+\subsubsection{Adaptive Removal of Principal Components}\label{sec:adaptivePCA}
+
+Instead of focussing on the artifacts frequency in sinusoidal terms, we might focus on its periodicity and estimate the modulation of the artifacts periodic components across time.
+By cutting a trial into epochs of period length, we can perform a prinical component analysis.
+If the trial duration is significantly larger than the duration of the physiological signal, we can safely assume that the physiological signal will only span a small subspace with small eigenvalues.
+Removing the largest principal components is then likely to reduce the artifact, but not the signal. Besides an arbitrary threshold (e.g.\ only the first, or three), we can also iteratively remove components until the power in the artifacts frequency is sufficiently reduced to par or below the power of nearby frequencies.
 
 \section{Evaluation}
 
-We implemented functions for kernel creation and artifact removal in Matlab 2016b. Code\footnote{\url{https://github.com/agricolab/ARtACS}}  can be accessed online. We evaluated the behavior of the various kernels regarding their frequency response characteristics~(see~\ref{sec:EvaluationFreq}) as well as their behavior on simulated~(see~\ref{sec:EvaluationSimulated})  and real data~(see~\ref{sec:EvaluationData}).
+We implemented several of the discussed functions for kernel creation and artifact removal in Matlab 2016b.\footnote{Code can be accessed freely, in open-source and online at \url{https://github.com/agricolab/ARtACS} and has been licensed under a X11-license.}
+We selected various kernels and evaluated their frequency response characteristics~(see~\ref{sec:EvaluationFreq}) as well as their performance on simulated~(see~\ref{sec:EvaluationSimulated}) and real data~(see~\ref{sec:EvaluationData}).
 
 \subsection{Evaluation of Frequency Response}\label{sec:EvaluationFreq}
 
@@ -311,6 +331,10 @@ This is also  true for the limiting case of $N = 1$, were we would again acquire
 \subsection{Evaluation on Simulated Signals}\label{sec:EvaluationSimulated}
 
 To evaluate the filters, we tested them on simulated signals. The simulated signal was created as superposition of a 10 Hz \gls{tacs}-artifact, and an \gls{erp}.
+The \gls{erp} was simulated as the gradient of a flat top window. The amplitude of the artifact was simulated as a distorted, non-stationary sinusoidal.
+The initial stimulation signal was modelled as sinusoidal signal. We distorted it by adding periodic white noise. Additionally, the stimulation amplitude was driven by an Ornstein–Uhlenbeck process with a stiffness 0.5, and a Hanning window time-locked to the event- related potential.
+In that way, we were able to simulate event-independent modulations of the artifacts amplitude, and modulations locked to an event.~\footnote{Code for signal generation is included in the toolbox at \url{https://github.com/agricolab/ARtACS}}
+Such effects were described by \citep{Noury_2016}, as having a strong potential to mask the true event-related neurophysiological activity.
 
 \begin{figure}[hbtp]
     \begin{subfigure}{0.245\textwidth}
@@ -333,29 +357,21 @@ To evaluate the filters, we tested them on simulated signals. The simulated sign
     \caption{Overview for Artifact Removal from  Simulated Signal}
 \end{figure}
 
+We simulated 100 trials with a length of 8000 samples. Subsequently, we explored different filters for 10 Hz, all with a period number of 10. The causal DFT filter was applied recursively not only at 10, but also at 20, 30, and 40 Hz to reduce harmonics.
 
-The \gls{erp} was simulated as numerical gradient of a flat top window.
-The amplitude of the artifact was simulated as a distorted, non-stationary sinusoidal. The initial stimulation signal was modelled as sinusoidal signal. We distorted it by adding periodic white noise. Additionally, the stimulation amplitude was driven by an Ornstein–Uhlenbeck, i.e. AR (1), process with a stiffness 0.5, and a Hanning window time-locked to the event- related potential.
-
-In that way, we were able to simulate event-independent modulations of the artifacts amplitude, and modulations locked to an event. Such effects were described by \citep{Noury_2016}, as having a strong potential to mask the true event-related neurophysiological activity.
-
-Subsequently, we explored different filter approaches, i.e.\ the two times four causal and symmetric weighted comb filters, all with a period number of 10. Additionally we evaluated adaptive discrete fourier filtering with the same period length of 10, and a linear regression of the artifact based on a copy of the efferent stimulation signal, as one could acquire from the \gls{tacs}-stimulator, e.g.\ the NeuroConn DC Plus.\footnote{Code can be found at \url{https://github.com/agricolab/ARtACS}}
-
-We simulated 100 trials. Based on  the correlation of the filtered, artifacted recording with the simulated underlying signal, we calculated the R² value. Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s~\figref{fig:simR2}.
-
-Visual inspection of the R² estimates shows that all filtering approaches are able to recover at least some information about the~\gls{erp}. Differences between the comb filters is small.
+Based on  the correlation of the filtered, artifacted recording with the known shape of the simulated~\gls{erp}, we calculated the R² value. Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s~\figref{fig:simR2}. Visual inspection of the R² estimates shows that all filtering approaches are able to recover at least some information about the~\gls{erp}. Differences between the comb filters is small.
 
 \subsection{Evaluation on real data}\label{sec:EvaluationData}
 
-To evaluate the filters, we tested them on real physiological signals. Consider that~\gls{tacs} can have physiological effects on cortical~\gls{erp}. To properly evaluate the recovery using the filtering approaches, we need a physiological signal which is unlikely to be affected by~\gls{tacs}.
+To evaluate the filters further, we tested them on real physiological signals. Consider that~\gls{tacs} can have physiological effects on cortical~\gls{erp}. To properly evaluate the recovery using the filtering approaches, we needed a physiological signal unlikely to be affected by~\gls{tacs}.
 
-We therefore measured~\gls{ecg} close to the flexor digitorum of the left upper limb, while we stimulated distal and proximal with~\gls{tacs} to the muscle belly with 11 Hz at 1 mA. We also recorded~\gls{ecg} at the chest, and detected the R-peak for epoching the data. Please note that no~\gls{tacs}-artifact was visible in the chest~\gls{ecg}.
-Physiological signals were acquired using BrainProducts amplifiers at a sampling rate of 1 kHz and low-pass filtered below 35 Hz. Stimulation as delivered using a NeuroConn DC Stimulator Plus with carbon rubber electrodes and Ten20 electrode gel.
+We therefore measured~\gls{ecg} at the flexor digitorum of the left upper limb, while we stimulated distal and proximal with~\gls{tacs} to the recording electrodes~\figref{fig:ecg_setup}. We also recorded~\gls{ecg} at the chest, and detected the R-peak for epoching the data. Please note that no~\gls{tacs}-artifact was visible in the chest~\gls{ecg}.
+Physiological signals were acquired using BrainProducts amplifiers at a sampling rate of 1 kHz and low-pass filtered below 35 Hz. Stimulation as delivered using a NeuroConn DC Stimulator Plus with carbon rubber electrodes and Ten20 electrode gel with an intensity of 1 mA at a frequency of 11 Hz.
 
 \begin{figure}[hbtp]
     \begin{subfigure}{.245\textwidth}
         \includegraphics[width=\textwidth]{./img/div/upper_limb_ecg.jpg}
-    \caption{Experimental Setup}
+    \caption{Experimental Setup}\label{fig:ecg_setup}
     \end{subfigure}
     \begin{subfigure}{.75\textwidth}
         \begin{subfigure}{.45\textwidth}
@@ -373,9 +389,29 @@ Physiological signals were acquired using BrainProducts amplifiers at a sampling
     \caption{Overview for Artifact Removal from Upper Limb Electrocardiogram}
 \end{figure}
 
-We recorded a total of 134 R-peaks without stimulation and 136 with stimulation. Based on  the correlation of the filtered, artifacted recordings with the grand-average of the stimulation-free signal, we calculated the R² value. Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s based on 100 epochs~\figref{fig:ecgR2}.
+We detected the R-peak based on the chest-recordings, which allowed us to cut epochs of 8s duration for the recording at the upper limb, for a total of 134 R-peaks without stimulation and 136 with stimulation. We estimated the true shape of the R-peak by taking the average of the stimulation-free signal.
+Based on  the correlation of the filtered, artifacted recordings with the averaged stimulation-free recording, we calculated the R² value.
+Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s based on 100 epochs~\figref{fig:ecgR2}.
 
-\section{Conclusion}
+\section{Discussion}
+
+\subsection{Echos}
+A key disadvantage of comb filters is that while it subtracts periodic signals, any underlying physiologal signal will cause a periodic echo, distributed according to the weights of the kernel.
+This means that strong weights close to the occurence of an event can increase the precision of the artifact amplitude estimate, but cause unwanted and very strong echos.
+If the duration of the physiological signal is longer than a period, the signal will be distorted by the echo.
+This could be addressed by \emph{delaying} the kernel, i.e.\ kernels with zero weights for a number of periods before their estimation weights start, or~\emph{inverting} the kernels, i.e.\ kernels with increasing instead of decreasing weights with increasing delay, or applying causal filters~\emph{piece-wise} left and right of the signal.
+~\footnote{If delayed or inverted kernels are used in a symmetric kernel, they appear~\emph{concave}.
+While such~\emph{concave, delayed or inverted} kernels might extend the window free of echos around physiological signals, they might not sufficiently account for the non-stationarity of the artifacts amplitude.
+The filtered signal might contain a residual artifact.
+Whether the trade-off between echo and residual artifact has an optimum for concave kernels or not depends very much on the individual signal under research. It might even vary between trials. Additionally, note that piece-wise filters can not be applied in real-time. Please note that at least on our datasets and simulations, these approaches were usually inferior to decreasing causal or symmetric kernels
+Nonetheless, concave methods have been implemented in the toolbox.}
+
+\subsection{Matched Phase and Frequency}
+Simulations suggested that the power of endogenous oscillations increases if the frequency of~\gls{tacs} matches the targets eigenfrequency~\citep{Kutchko_2013,Zaehle_2010}.
+This has been supported by evidence from animal studies~\citep{Schmidt_2014}, and human studies combining \gls{tacs} with \gls{tms} \citep{Guerra_2016}, or contrasting pre and post resting state power analysis \citep{Zaehle_2010}.
+It has also been suggested that the phase of neuronal populations would be locked to the phase of the \gls{tacs} signal \citep{Reato_2013}. This has been supported by evidence from studies combining \gls{tacs} with motor output \citep{Brittain_2013}, \gls{tms}~\citep{Raco_2016,Nakazono_2016} or sensory perception~\citep{Gundlach_2016}.
+At the same time, event-locked modulation of skin impedance can mimic phase and/or frequency locked modulations. Events might even be endogenous, e.g.\ heart beats~\citep{Noury_2016}.
+This suggests that transient and event-locked modulations in frequency and phase matching to the \gls{tacs} can make the  distinction between artifact and neurophysiological effect  difficult or impossible.
 
 \bibliographystyle{apalike-oadoi}
 \bibliography{sample}
