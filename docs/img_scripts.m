@@ -10,43 +10,67 @@ red = [0.8500 0.3250 0.0980];
 load('.\data\median\SEP_10Hz.mat');
 close all
 figure
-set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
+set(gcf,'Position',[100 100 375 200],'paperpositionmode','auto')
 
 tmp = trials(2,:);
 tmp = reshape(tmp(247:end-254),500,[]);
 tmp = tmp-mean(mean(tmp));
-
 xaxis = rad2deg(2*pi*[0.002:0.002:1]);
 pick  = 1:300;
 hold on
 h1 = plot(xaxis(pick),tmp(pick,:),'color',[.5 .5 .5],'linewidth',1);
 h2 = plot(xaxis(pick),mean(tmp(pick,:),2),'color',red,'linewidth',2);
 set(gca,'XTICK',0:15:360,'XLIM',[60 120])
-set(gca,'YTICK',-5000:100:5000,'YLIM',[2750 3300],'YTICKLABEL',[])
+set(gca,'YTICK',-5000:100:5000,'YLIM',[2750 3100],'YTICKLABEL',[])
 xlabel('Phase in degree (°)')
-ylabel('Amplitude in a.u.')
+%ylabel('Amplitude in a.u.')
 l1 = legend([h1(1),h2],'Periods','Average','location','northoutside');
-set(l1,'position',[0.15 .85 0 .130])
+set(l1,'position',[0.15 .81 0 .130])
 %title('Distortion')
 print(gcf,[printfolder,'intro/distortion.png'],'-dpng')
 
 figure
-set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
+set(gcf,'Position',[600 100 375 200],'paperpositionmode','auto')
 tmp = trials(1,:);
 tmp = reshape(tmp(379:end-122),500,[]);
 tmp = tmp-mean(mean(tmp));
-
 xaxis = rad2deg(2*pi*[0.002:0.002:1]);
 hold on
 h1 = plot(xaxis(pick),tmp(pick,:),'color',[.5 .5 .5],'linewidth',1);
 h2 = plot(xaxis(pick),mean(tmp(pick,:),2),'color',red,'linewidth',2);
 set(gca,'XTICK',0:15:360,'XLIM',[60 120])
-set(gca,'YTICK',-5000:100:5000,'YLIM',[2750 3300],'YTICKLABEL',[])
+%set(gca,'XTICK',0:15:360,'XLIM',[0 360])
+set(gca,'YTICK',-5000:100:5000,'YLIM',[2750 3100],'YTICKLABEL',[])
 xlabel('Phase in degree (°)')
-l1 = legend([h1(1),h2],'Periods','Average','location','northoutside');
-set(l1,'position',[0.85 .85 0 .130])
+%l1 = legend([h1(1),h2],'Periods','Average','location','northoutside');
+%set(l1,'position',[0.85 .85 0 .130])
 %title('Saturation')
 print(gcf,[printfolder,'intro/saturation.png'],'-dpng')
+
+
+[~,data]    = utils.getECG('10Hz.vhdr');
+
+close all
+sig         = data.trial{1}(2,:)-data.trial{1}(3,:);
+ptrials     = reshape(sig(1:end - (mod(length(sig),100))),100,[]);
+amp         = max(ptrials);
+amp         = interp1((1:length(amp))*100,amp,1:length(sig),'linear','extrap');
+figure
+set(gcf,'Position',[100 100 1200 300],'paperpositionmode','auto')
+h1 = plot(sig,'color',blue);
+hold on
+h2 = plot(amp,'linewidth',2,'color',red);
+set(gca,'ylim',[1.089*10^4 1.106*10^4],'xlim',[0 4*10^4])
+set(gca,'ytick',[0:0.005:2]*10^4,'yticklabel',[0:0.005:2].*10^4)
+ylabel('µV')
+set(gca,'xtick',[0:0.25:10]*10^4,'xticklabel',[0:0.25:10]*1000)
+xlabel('Time in ms')
+lh = legend([h1,h2],'Artifacted Recording','Envelope');
+set(lh,'position',[0.85 .15 0 .130])
+print(gcf,[printfolder,'intro/nonstationarity.png'],'-dpng')
+
+
+
 %% ECG PLOTS
 NumberPeriods   = 10;
 Fs              = 1000;
@@ -242,7 +266,7 @@ ylabel('µV')
 xlabel('ms')
 lh = legend([h1,h2],'Artifacted Simulation','Clean Simulation');
 set(lh,'position',[0.8 .85 .08 .08])
-print(gcf,['.\repo\img\exemplary_generic.png'],'-dpng')
+%print(gcf,['.\repo\img\exemplary_generic.png'],'-dpng')
 
 
 figure
@@ -376,7 +400,8 @@ ylabel('Recovery (R²)')
 grid on
 print(gcf,[printfolder,'eva\sim_R2.png'],'-dpng')
 
-%% Frequency Response of Examples
+%% Frequency Response 
+%% CAUSAL KERNELS
 close all
 
 NumberPeriods   = 10;
@@ -385,22 +410,22 @@ Fs              = 1000;
 
 artacs.kernel.response(artacs.kernel.causal(NumberPeriods,tacsFreq,Fs,'ave'),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'causal/kernel_ave.png'],'-dpng')
 
 artacs.kernel.response(artacs.kernel.causal(NumberPeriods,tacsFreq,Fs,'linear'),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'causal/kernel_linear.png'],'-dpng')
 
 artacs.kernel.response(artacs.kernel.causal(NumberPeriods,tacsFreq,Fs,'exp'),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'causal/kernel_exp.png'],'-dpng')
 
 artacs.kernel.response(artacs.kernel.causal(NumberPeriods,tacsFreq,Fs,'gauss'),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'causal/kernel_gauss.png'],'-dpng')
 % --------------------
 
@@ -420,26 +445,26 @@ artacs.kernel.response(artacs.kernel.causal(NumberPeriods,tacsFreq,Fs,'gauss'),2
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
 print(gcf,[printfolder,'causal/mag_gauss.png'],'-dpng')
 
-%%
+%% SYMMETRIC KERNELS
 
 artacs.kernel.response(artacs.kernel.symmetric(NumberPeriods,tacsFreq,Fs,'ave'),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'sym/kernel_ave.png'],'-dpng')
 
 artacs.kernel.response(artacs.kernel.symmetric(NumberPeriods,tacsFreq,Fs,'linear'),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'sym/kernel_linear.png'],'-dpng')
 
 artacs.kernel.response(artacs.kernel.symmetric(NumberPeriods,tacsFreq,Fs,'exp'),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'sym/kernel_exp.png'],'-dpng')
 
 artacs.kernel.response(artacs.kernel.symmetric(NumberPeriods,tacsFreq,Fs,'gauss'),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'sym/kernel_gauss.png'],'-dpng')
 
 % --------------------
@@ -460,26 +485,26 @@ artacs.kernel.response(artacs.kernel.symmetric(NumberPeriods,tacsFreq,Fs,'gauss'
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
 print(gcf,[printfolder,'sym/mag_gauss.png'],'-dpng')
 
-%%
+%% INVERTED KERNELS
 
 artacs.kernel.response(artacs.kernel.create(NumberPeriods,tacsFreq,Fs,'symmetric','uniform','default','inc',1),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'inv/kernel_ave.png'],'-dpng')
 
 artacs.kernel.response(artacs.kernel.create(NumberPeriods,tacsFreq,Fs,'symmetric','linear','default','inc',1),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'inv/kernel_linear.png'],'-dpng')
 
 artacs.kernel.response(artacs.kernel.create(NumberPeriods,tacsFreq,Fs,'symmetric','exp','default','inc',1),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'inv/kernel_exp.png'],'-dpng')
 
 artacs.kernel.response(artacs.kernel.create(NumberPeriods,tacsFreq,Fs,'symmetric','gauss','default','inc',1),1)
 set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-set(gca,'ylim',[-.75 1.1])
+set(gca,'ylim',[-1.1 1.1])
 print(gcf,[printfolder,'inv/kernel_gauss.png'],'-dpng')
 
 % --------------------
@@ -501,25 +526,14 @@ set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
 print(gcf,[printfolder,'inv/mag_gauss.png'],'-dpng')
 
 %% Kernel Tuning
-tau     = [0,5,100,1000];
-close all
+artacs.kernel.response(artacs.kernel.causal(NumberPeriods,tacsFreq,Fs,'exp',100),1)    
+set(gca,'ylim',[-1.1 1.1])
+set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
+print(gcf,[printfolder,'tau/kernel_exp_100','.png'],'-dpng')
 
-for tau_idx = 1 : length(tau)
-    figure
-    hold on
-    set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
-    artacs.kernel.response(artacs.kernel.causal(NumberPeriods,tacsFreq,Fs,'exp',tau(tau_idx)),1,[],gcf)    
-    set(gca,'ylim',[-1.1 1.1])
-    %set(get(gca,'children'),'Markerfacecolor',cmap{tau_idx});    
-    print(gcf,[printfolder,'tau/kernel_exp_',num2str(tau(tau_idx)),'.png'],'-dpng')
-    
-    figure
-    hold on
-    set(gcf,'Position',[100 500 400 300],'paperpositionmode','auto')
-    artacs.kernel.response(artacs.kernel.causal(NumberPeriods,tacsFreq,Fs,'exp',tau(tau_idx)),2,30,gcf)    
-   % set(get(gca,'children'),'Color',cmap{tau_idx});    
-    print(gcf,[printfolder,'tau/mag_exp_',num2str(tau(tau_idx)),'.png'],'-dpng')
-end
+artacs.kernel.response(artacs.kernel.causal(NumberPeriods,tacsFreq,Fs,'exp',100),2,30)    
+set(gcf,'Position',[100 100 400 300],'paperpositionmode','auto')
+print(gcf,[printfolder,'tau/mag_exp_100','.png'],'-dpng')
 
 %%
 close all

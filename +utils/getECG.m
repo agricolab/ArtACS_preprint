@@ -1,4 +1,4 @@
-function trials = getECG(filename)
+function [trials,data] = getECG(filename)
 
 curdir      = pwd;
 datafolder  = [pwd,'\data\ecg\'];
