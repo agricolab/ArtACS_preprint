@@ -180,7 +180,9 @@ Yet, these approaches require extended calculation periods and/or offline analys
 Consider for example the simple one-step comb filter, where we remove the artifact by subtracting a value sampled from any earlier period.
 Assume now that this value were not drawn from the last period, but instead drawn at random from the last $N$ periods with uniform distribution.
 If the system governing amplitude modulation were fully stationary for the last $N$ periods, performance would in law be virtually identical to the comb filter based on averaging~\eqref{eq:Uniform}.
-If it were instead non-stationary, we would expect that the precision of the estimate degrades with longer delay. For example, in the case of the uniform filter, we have a shape parameter $N$, defining how far back we trust a measurement to have the same precision as earlier samples. This rationale justifies non-uniform weights, and to use weights that are linked to the precision of the sample.
+If it were instead non-stationary, we would expect that the accuracy of the estimate degrades with longer delay while the precision improves by increasing the number of periods on which we base our estimate.
+For example, in the case of the uniform filter, we have a shape parameter $N$, defining how far back we trust a measurement to have the same accuracy as earlier samples.
+This rationale justifies non-uniform weights, and to use weights that are designed to increase precision and accuracy of the estimate.
 
 \subsubsection{Justification by AR~(1) process}
 
@@ -241,36 +243,35 @@ with the following generating function and normalization
 
 \subsection{Alternative Filter Approaches}
 
-Besides the discussed real-valued causal comb filters, several other approaches for filtering the~\gls{tacs}-artifact are possible. For example, one could estimate the weight at each period delay by calculating the autocorrelation~\ref{sec:automaticKernel}, remove periodic principial components~\ref{sec:adaptivePCA}, or use complex-valued kernels~\ref{sec:causalDFT}.
-
-Consider that these approaches are either computationally more complex~\ref{sec:automaticKernel}, work primarily offline~\ref{sec:adaptivePCA} or assume sinusoidality of the artifact~\ref{sec:causalDFT},the causal methods presented here are conceptually simpler.
+Besides the discussed real-valued causal comb filters, several other approaches for filtering the~\gls{tacs}-artifact are possible. For example, one could derive the weight at each period from the autocorrelation across periods~\ref{sec:automaticKernel}, or remove periodic principial components until the artifacts power is sufficiently suppressed~\ref{sec:adaptivePCA}, or use complex-valued kernels which would natively support non-integer frequencies~\ref{sec:causalDFT}.
 
 \subsubsection{Automatic Weight Estimation}\label{sec:automaticKernel}
 
-By cutting a trial into epochs of period length, we can estimate the average autocorrelation for each phase across different (period length) lags. Because this measure is a direct indicator of the reliability of earlier measurements for estimating the current artifact amplitude, we can use it to derive empirical kernel weights.
+As mentioned, weighted comb filters can be justfied by using  weights to maximize accuracy and precision of the artifact estimate based on sampling from earlier periods.
+This process can be put on an empirical foundation, e.g.\ by calculating the autocorrelation of the recording, which is dominated by the artifact. Weights are then based on the autocorrelation coefficients at periodic lags.
 
 \subsubsection{Causal Discrete Fourier Transformation}\label{sec:causalDFT}
 
-To get hold of the artifacts no-stationarity, we might also approach by iteratively estimating for each time point the artifact power at the frequency of~\gls{tacs}, e.g.\ by using a discrete fourier transformation with a window over a certain number of period periods, and use that for scaling the artifact template to be removed.
-The estimation-removal-process can be understood as convolution of the recording with a complex kernel at the artifacts frequency and subsequent subtraction.
-While it has the advantage that it supports natively frequencies which are not integer divisibles of the sampling frequency, we need to assume sinusoidality of the artifact. Additionally, to remove the artifact at harmonic frequencies, the computation has to be performed several times.
-Whether this approach is sufficient, will depende on whether the artifact can be sufficiently catched by these few frequencies.
+We might also tackle the non-stationarity of the artifact by  estimating the artifacts power in a specific frequency for each time-point, using a window of $N$ periods based on the frequency of~\gls{tacs}. This approach can be implemented as convolution of the recording with a complex kernel at the artifacts frequency, followed by subtraction.
+While it has the advantage that it supports natively frequencies which are not integer divisibles of the sampling frequency, we need to assume sinusoidality of the artifact. Additionally, to remove the artifact at harmonic frequencies, the computation has to be performed several times for each harmonic frequency.
+Whether this approach is sufficient, will therefore depends on whether the artifact can be sufficiently catched by these few frequencies.
 
-\subsubsection{Adaptive Removal of Principal Components}\label{sec:adaptivePCA}
+\subsubsection{Adaptive Removal of Periodic Principal Components}\label{sec:adaptivePCA}
 
-Instead of focussing on the artifacts frequency in sinusoidal terms, we might focus on its periodicity and estimate the modulation of the artifacts periodic components across time.
-By cutting a trial into epochs of period length, we can perform a prinical component analysis.
-If the trial duration is significantly larger than the duration of the physiological signal, we can safely assume that the physiological signal will only span a small subspace with small eigenvalues.
-Removing the largest principal components is then likely to reduce the artifact, but not the signal. Besides an arbitrary threshold (e.g.\ only the first, or three), we can also iteratively remove components until the power in the artifacts frequency is sufficiently reduced to par or below the power of nearby frequencies.
+Instead of understanding the artifacts in sinusoidal terms, we can also focus on its periodicity and estimate the modulation of the artifacts periodic components across time.
+This can be implemented by cutting a recording into epochs with period length, followed by prinical component analysis.\footnote{Please note that we found that the naive approach of simply cutting the recording into epochs of period length returned boundary artifacts at the start and end of each epoch. Running the algorithm at a set of random initial lags, and subsequently averaging their results was sufficient to remove such boundary artifacts.}
+If the trial duration is significantly larger than the duration of the physiological signal, and as the artifacts amplitude is much larger than the physiological signal, we are justified to assume that the physiological signal will only span a subspace with small eigenvalues.
+The major components will catch the shape components of the artifact, their amplitude modulation over time, and if present, any phase-lag induced by clock asynchrony between stimulator and recording devices. Removing the largest principal components will therefore be more likely to reduce the power of the artifact, and not of the signal.
+This approach can be performed iteratively until a specific condition is achieved. We implemented such an iterative approach by removing components until the power in the artifacts frequency band is sufficiently reduced below the level of nearby, non-artifacted frequencies.
 
 \section{Evaluation}
 
-We implemented several of the discussed functions for kernel creation and artifact removal in Matlab 2016b.\footnote{Code can be accessed freely, in open-source and online at \url{https://github.com/agricolab/ARtACS} and has been licensed under a X11-license.}
-We selected various kernels and evaluated their frequency response characteristics~(see~\ref{sec:EvaluationFreq}) as well as their performance on simulated~(see~\ref{sec:EvaluationSimulated}) and real data~(see~\ref{sec:EvaluationData}).
+We implemented all of the discussed approaches for kernel creation and artifact removal in Matlab 2016b. The code can be accessed freely, in open-source and online at \url{https://github.com/agricolab/ARtACS} and has been licensed under a X11-license.
+We selected several kernel approaches and evaluated their frequency response characteristics~(see~\ref{sec:EvaluationFreq}). Additonally,we evaluated their performance in comparison also to alternative approaches on simulated~(see~\ref{sec:EvaluationSimulated}) and real data~(see~\ref{sec:EvaluationData}).
 
 \subsection{Evaluation of Frequency Response}\label{sec:EvaluationFreq}
 
-Examine the following exemplary kernels constructed for a sampling rate of 1KHz, a stimulation frequency of 10 Hz and a memory of 10~\figref{fig:ExemplaryCausalKernels}.
+Examine the following exemplary kernels constructed for a sampling rate of 1KHz, a stimulation frequency of 10 Hz and a memory of 10 periods~\figref{fig:ExemplaryCausalKernels}.
 
 \begin{figure}[hbtp]
     \begin{subfigure}{.245\textwidth}
@@ -394,6 +395,8 @@ Based on  the correlation of the filtered, artifacted recordings with the averag
 Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s based on 100 epochs~\figref{fig:ecgR2}.
 
 \section{Discussion}
+
+% TODO: Fill Discussion #write
 
 \subsection{Echos}
 A key disadvantage of comb filters is that while it subtracts periodic signals, any underlying physiologal signal will cause a periodic echo, distributed according to the weights of the kernel.

@@ -125,23 +125,26 @@ for trl_idx = 1 : size(stim_trials,1)
     f                                       = artacs.kernel.run(r,NumberPeriods,tacsFreq,Fs,'causal','gauss','default','default');
     [R(4,trl_idx),F(4,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
     
-    f                                       = artacs.kernel.run(r,NumberPeriods,tacsFreq,Fs,'symmetric','uniform','default','default');
+    f                                       = artacs.kernel.run(r,NumberPeriods,tacsFreq,Fs,'symmetric','automatic','default','default');
     [R(5,trl_idx),F(5,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
+    
+    f                                       = artacs.kernel.run(r,NumberPeriods,tacsFreq,Fs,'symmetric','uniform','default','default');
+    [R(6,trl_idx),F(6,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
     
     freqharm                                = [1:4]*tacsFreq;
     f                                       = artacs.dft.causal(r,freqharm,Fs,NumberPeriods);                  
-    [R(6,trl_idx),F(6,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
-
-    f                                       = artacs.template.stepwise(r,tacsFreq,Fs,'random');
     [R(7,trl_idx),F(7,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
 
-    f                                       = clean_trials(datasample(1:size(clean_trials,1),1),:);
+    f                                       = artacs.template.stepwise(r,tacsFreq,Fs,'random');
     [R(8,trl_idx),F(8,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
+
+    f                                       = clean_trials(datasample(1:size(clean_trials,1),1),:);
+    [R(9,trl_idx),F(9,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
 
 end
 
 
-filter_names        = {'Causal Uniform','Causal Linear','Causal Exponential','Causal Gaussian','Symmetric Uniform','Causal DFT','Adaptive PCA','Stim-free Bootstrap'};
+filter_names        = {'Causal Uniform','Causal Linear','Causal Exponential','Causal Gaussian','Symmetric Uniform','Symmetric Automatic','Causal Complex','Adaptive pPCA','Stim-free Bootstrap'};
 Efun                = @(x,prm)mean(x,prm);
 
 close all

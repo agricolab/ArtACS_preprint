@@ -46,7 +46,7 @@ for dset_idx = 1 : length(dataset_names)
         end
         
         freqharm                                = [1:4]*tacsFreq;
-        f                                       = artacs.dft.local(r,freqharm,Fs,NumberPeriods);                  
+        f                                       = artacs.dft.causal(r,freqharm,Fs,NumberPeriods);                  
         [R(fidx+1,trl_idx),F(fidx+1,trl_idx,:)] = utils.regain(f,E,toi,blperiod);
 
         f                                       = artacs.template.stepwise(r,tacsFreq,Fs,'random');
