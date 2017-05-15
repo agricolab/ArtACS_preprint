@@ -15,7 +15,7 @@
 \newcommand{\figref}[1]{(see figure~\ref{#1})}
 \newcommand{\secref}[1]{(see~\ref{#1})}
 
-\usepackage[sfdefault,lf]{carlito}
+%\usepackage[sfdefault,lf]{carlito}
 %% The 'lf' option for lining figuressy
 %% The 'sfdefault' option to make the base font sans serif
 \usepackage[parfill]{parskip}
@@ -62,6 +62,7 @@
 \newacronym{tacs}{tACS}{transcranial alternating current stimulation}
 \newacronym{tms}{TMS}{transcranial magnetic stimulation}
 \newacronym{tpca}{tPCA}{temporal principal component analysis}
+\newacronym{ppca}{pPCA}{periodic principal component analysis}
 \newacronym{sma}{SMA}{superposition of moving averages}
 \newacronym{erp}{ERP}{event-related potential}
 \makeglossaries{}
@@ -117,7 +118,7 @@ Figure~\ref{fig:nonsinus} shows examples of distortion and saturation in two rec
     \caption{Saturation}\label{fig:saturation}
     \end{subfigure}
 
-    \caption{Examples for lack of sinusoidality and stationarity}\label{fig:nonsinus}
+    \caption{Exemplary Recordings highlight Distortion and Non-Stationarity}\label{fig:nonsinus}
 \end{figure}
 
 The temporally and spatially uneven impedance distribution has been suggested as cause of distortion.
@@ -275,7 +276,7 @@ Instead of understanding the artifacts in sinusoidal terms, we can also focus on
 This can be implemented by cutting a recording into epochs with period length, followed by prinical component analysis.\footnote{Please note that we found that the naive approach of simply cutting the recording into epochs of period length returned boundary artifacts at the start and end of each epoch. Running the algorithm at a set of random initial lags, and subsequently averaging their results was sufficient to remove such boundary artifacts.}
 If the trial duration is significantly larger than the duration of the physiological signal, and as the artifacts amplitude is much larger than the physiological signal, we are justified to assume that the physiological signal will only span a subspace with small eigenvalues.
 The major components will catch the shape components of the artifact, their amplitude modulation over time, and if present, any phase-lag induced by clock asynchrony between stimulator and recording devices. Removing the largest principal components will therefore be more likely to reduce the power of the artifact, and not of the signal.
-This approach can be performed iteratively until a specific condition is achieved. We implemented such an iterative approach by removing components until the power in the artifacts frequency band is sufficiently reduced below the level of nearby, non-artifacted frequencies.
+Removal of the largest component derived using main~\gls{ppca} can be performed iteratively until a specific condition is achieved. We implemented such an iterative approach by removing components until the power in the artifacts main frequency was reduced below the level of nearby, non-artifacted frequencies.
 
 \subsection{Implementation}
 
@@ -319,23 +320,22 @@ Examine the following exemplary kernels constructed for a sampling rate of 1KHz,
         \includegraphics[width=\textwidth]{img/sym/mag_ave.png}
         \caption{\scriptsize{Symmetric Uniform}}\label{fig:SymmetricUniform}
     \end{subfigure}
-    \caption{Exemplary Kernels}\label{fig:ExemplaryCausalKernels}
+    \caption{Exemplary Kernels highlight Differences especially in the Pass-band}\label{fig:ExemplaryCausalKernels}
 \end{figure}
 
-As you can see from figure~\ref{fig:ExemplaryCausalKernels}, the (numerically calculated) magnitude responses of the comb filteres approaches are similar in their key characteristic, the strong supression of the DC component, the target frequency, and its harmonics.
-Yet, note that the comb filteres exhibit strong difference in passband behavior. We find strong ringing in the passband for the uniform~(\ref{fig:UniformKernel}) and linear kernel~(\ref{fig:LinearKernel}), especially compared to the smooth transitions of the exponential~(\ref{fig:ExponentialKernel}) or Gaussian kernel~(\ref{fig:GaussKernel}).
-Ringing is also present for a~\gls{sma} or symmetric uniform kernel~(\ref{fig:SymmetricUniform}).
+As you can see from figure~\ref{fig:ExemplaryCausalKernels}, the magnitude responses of the comb filteres approaches are similar in their key characteristic. All exhibit a strong supression of the recordings DC component, the target frequency, and its harmonics.
+Yet, note that the filters exhibit strong difference in passband behavior. We find strong ringing in the passband for the uniform~(\ref{fig:UniformKernel}) and linear kernel~(\ref{fig:LinearKernel}), especially compared to the smooth transitions of the exponential~(\ref{fig:ExponentialKernel}) or Gaussian kernel~(\ref{fig:GaussKernel}).
+Passband ringing is also present for the~\gls{sma} or symmetric uniform kernel~(\ref{fig:SymmetricUniform}).
 
-We also constructed a set of exponential kernels constructed with different $\tau$ and $N$ to explore their behavior.
-We find it of note that that in the limiting case of $\tau = 0$, the exponential kernel virtually converges with the uniform kernel~\figref{fig:UniformKernel}. Using a $\tau$ equal to the artifacts period length, the exponential kernel almost fully converges with the simple comb filter~\figref{fig:ExpTau100}.
-Note also that very high $\tau$ would return an impulse response, and therefore just pass all signals.
-This is also  true for the limiting case of $N = 1$, were we would again acquire a simple one-step comb filter~\figref{fig:ExpTau100}.
+We also constructed a set of exponential kernels constructed with different $\tau$ to explore their behavior.
+We find it of note that that in the limiting case of $\tau = 0$, the exponential kernel virtually converges with the uniform kernel~\figref{fig:UniformKernel}. Using a $\tau$ equal to the artifacts period length, the exponential kernel almost fully converges with a simple one-step comb filter~\figref{fig:ExpTau100}.
+Note also that for all decreasing weight functions, very high $\tau$ would return an impulse response, and therefore just pass all signals.
 
 \subsection{Evaluation on Simulated Signals}\label{sec:EvaluationSimulated}
 
 To evaluate the filters, we tested them on simulated signals. The simulated signal was created as superposition of a 10 Hz \gls{tacs}-artifact, and an \gls{erp}.
 The \gls{erp} was simulated as the gradient of a flat top window. The amplitude of the artifact was simulated as a distorted, non-stationary sinusoidal.
-The initial stimulation signal was modelled as sinusoidal signal. We distorted it by adding periodic white noise. Additionally, the stimulation amplitude was driven by an Ornstein–Uhlenbeck process with a stiffness 0.5, and a Hanning window time-locked to the event- related potential.
+The initial stimulation signal was modelled as sinusoidal signal. We distorted it by adding periodic white noise. Additionally, the stimulation amplitude was driven by an Ornstein–Uhlenbeck process with a stiffness 0.5, and a Hanning window time-locked to the event-related potential.
 In that way, we were able to simulate event-independent modulations of the artifacts amplitude, and modulations locked to an event.~\footnote{Code for signal generation is included in the toolbox at \url{https://github.com/agricolab/ARtACS}}
 Such effects were described by \citep{Noury_2016}, as having a strong potential to mask the true event-related neurophysiological activity.
 
@@ -357,7 +357,7 @@ Such effects were described by \citep{Noury_2016}, as having a strong potential 
         \includegraphics[width=\textwidth]{img/eva/sim_R2.png}
         \caption{Kernel Density Estimation of R² for different filter approaches}\label{fig:simR2}
     \end{subfigure}
-    \caption{Overview for Artifact Removal from  Simulated Signal}
+    \caption{Overview for Artifact Removal from  Simulated Signal suggests sufficient Performance}
 \end{figure}
 
 We simulated 100 trials with a length of 8000 samples. Subsequently, we explored different filters for 10 Hz, all with a period number of 10. The causal DFT filter was applied recursively not only at 10, but also at 20, 30, and 40 Hz to reduce harmonics.
@@ -389,34 +389,98 @@ Physiological signals were acquired using BrainProducts amplifiers at a sampling
         \includegraphics[width=\textwidth]{img/eva/ecg_R2.png}
         \caption{Kernel Density Estimation of R² for different filter approaches}\label{fig:ecgR2}
     \end{subfigure}
-    \caption{Overview for Artifact Removal from Upper Limb Electrocardiogram}
+    \caption{Overview for Artifact Removal from Upper Limb Electrocardiogram suggests sufficient Performance}
 \end{figure}
 
 We detected the R-peak based on the chest-recordings, which allowed us to cut epochs of 8s duration for the recording at the upper limb, for a total of 134 R-peaks without stimulation and 136 with stimulation. We estimated the true shape of the R-peak by taking the average of the stimulation-free signal.
 Based on  the correlation of the filtered, artifacted recordings with the averaged stimulation-free recording, we calculated the R² value.
 Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s based on 100 epochs~\figref{fig:ecgR2}.
+Additionally, note the recovery of the signal in the time-domain~\figref{fig:td_echo}.
 
 \section{Discussion}
 
-% TODO: Fill Discussion #write
+We developed a justification for weighted comb filters, and explored their frequency response and their performance on simulated and real data.
 
-\subsection{Echos}
-A key disadvantage of comb filters is that while it subtracts periodic signals, any underlying physiologal signal will cause a periodic echo, distributed according to the weights of the kernel.
-This means that strong weights close to the occurence of an event can increase the precision of the artifact amplitude estimate, but cause unwanted and very strong echos.
-If the duration of the physiological signal is longer than a period, the signal will be distorted by the echo.
-This could be addressed by \emph{delaying} the kernel, i.e.\ kernels with zero weights for a number of periods before their estimation weights start, or~\emph{inverting} the kernels, i.e.\ kernels with increasing instead of decreasing weights with increasing delay, or applying causal filters~\emph{piece-wise} left and right of the signal.
+\subsection{Performance}\label{sec:discussPerformance}
+
+We found that independent of the weighting function, all comb filters exhibit strong suppression of the DC component, the artifacts frequency and harmonics~\secref{sec:EvaluationSimulated}.
+Yet, different weighting functions exhibit different pass-band performance, which is especially evident as ringing~\figref{fig:UniformKernel} or amplification~\figref{fig:ExpTau100}.
+
+For real and simulated datasets, all approaches were able to recover the signal. Contrasting their performance on simulated~\secref{sec:EvaluationSimulated} or real data~\secref{sec:EvaluationData}, we found generally quite similar profiles.
+
+All comb filters performed very similar, but it should be noted that the weighted filters exhibited slightly average lower R² values in both settings and a slightly more skewed distribution for real data~\figref{fig:ecgR2}. This might be linked to distortion by echos~\secref{sec:discussEcho} or insufficient artifact removal in a few trials.
+The causal complex filter performed worst, although we filtered not only the main frequency of the artifact, but also the harmonical frequencies. This is most likely caused by the non-sinusoidality of the artifact.
+
+Most interestingly, the causal uniform filter performed on par with the symmetric filters, regardless of whether these were weighted uniform or based on the autocorrelation. This suggests that the causal uniform filter can be highly effective, in spite of its low computational complexity,
+
+The~\gls{ppca} showed superior performance in the simulation, but only average performance in the real dataset. The likely reason is that the linear composition of the simulated recording was a prime candidate for linear separation by~\gls{ppca} and suggests that simulation studies for exploration of filter performance can exaggerate the performance of decomposition approaches.
+
+\subsection{Echos}\label{sec:discussEcho}
+A key disadvantage of comb filters is that while they subtract the artifacts, any underlying physiologal signal will cause a periodic echo according to the weights of the kernel.
+
+\begin{figure}[hbtp]
+    \begin{subfigure}{0.245\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/ecg_td_Causal_Uniform.png}
+        \caption{Causal Uniform}\label{fig:td_causaluniform}
+    \end{subfigure}
+    \begin{subfigure}{0.245\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/ecg_td_Causal_Linear.png}
+        \caption{Causal Linear}\label{fig:td_causallinear}
+    \end{subfigure}
+    \begin{subfigure}{0.245\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/ecg_td_Causal_Exponential.png}
+        \caption{Causal Exponential}\label{fig:td_causalexp}
+    \end{subfigure}
+    \begin{subfigure}{0.245\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/ecg_td_Causal_Gaussian.png}
+        \caption{Causal Gaussian}\label{fig:td_causalgauss}
+    \end{subfigure}
+
+    \begin{subfigure}{0.245\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/ecg_td_Symmetric_Uniform.png}
+        \caption{Symmetric Uniform}\label{fig:td_symuniform}
+    \end{subfigure}
+    \begin{subfigure}{0.245\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/ecg_td_Symmetric_Automatic.png}
+        \caption{Symmetric Automatic}\label{fig:td_symauto}
+    \end{subfigure}
+    \begin{subfigure}{0.245\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/ecg_td_Causal_Complex.png}
+        \caption{Causal Complex}\label{fig:td_causaldft}
+    \end{subfigure}
+    \begin{subfigure}{0.245\textwidth}
+        \includegraphics[width=\textwidth]{./img/eva/ecg_td_Adaptive_pPCA.png}
+        \caption{Adaptive pPCA}\label{fig:td_pPCA}
+    \end{subfigure}
+    \caption{Overview of Reconstruction in the time domain highlights possibility of echos}\label{fig:td_echo}
+\end{figure}
+
+This means that strong weights close to the kernels center might increase the precision of the artifact amplitude estimate, but can also induce unwanted and strong echos  close to the occurence of a physiologically interesting event~\label{fig:td_echo}.
+
+Additionally, if the duration of the physiological signal is longer than the period of the kernel, the signal will be distorted by the echo.
+This could be addressed by~\emph{delaying} the kernel, i.e.\ kernels with zero weights for a number of periods before their estimation weights start, or~\emph{inverting} the kernels, i.e.\ kernels with increasing instead of decreasing weights with increasing delay, or applying causal filters~\emph{piece-wise} left and right of the signal.
 ~\footnote{If delayed or inverted kernels are used in a symmetric kernel, they appear~\emph{concave}.
 While such~\emph{concave, delayed or inverted} kernels might extend the window free of echos around physiological signals, they might not sufficiently account for the non-stationarity of the artifacts amplitude.
 The filtered signal might contain a residual artifact.
-Whether the trade-off between echo and residual artifact has an optimum for concave kernels or not depends very much on the individual signal under research. It might even vary between trials. Additionally, note that piece-wise filters can not be applied in real-time. Please note that at least on our datasets and simulations, these approaches were usually inferior to decreasing causal or symmetric kernels
-Nonetheless, concave methods have been implemented in the toolbox.}
+Whether the trade-off between echo and residual artifact warrants concave kernels depends strongly on the signal under research.
+Please note that at least on our datasets and simulations, concave approaches were usually inferior to the regular  causal or symmetric kernels.}
 
 \subsection{Matched Phase and Frequency}
-Simulations suggested that the power of endogenous oscillations increases if the frequency of~\gls{tacs} matches the targets eigenfrequency~\citep{Kutchko_2013,Zaehle_2010}.
+
+Simulation studies suggested that the power of endogenous oscillations increases if the frequency of~\gls{tacs} matches the targets eigenfrequency~\citep{Kutchko_2013,Zaehle_2010}.
 This has been supported by evidence from animal studies~\citep{Schmidt_2014}, and human studies combining \gls{tacs} with \gls{tms} \citep{Guerra_2016}, or contrasting pre and post resting state power analysis \citep{Zaehle_2010}.
 It has also been suggested that the phase of neuronal populations would be locked to the phase of the \gls{tacs} signal \citep{Reato_2013}. This has been supported by evidence from studies combining \gls{tacs} with motor output \citep{Brittain_2013}, \gls{tms}~\citep{Raco_2016,Nakazono_2016} or sensory perception~\citep{Gundlach_2016}.
 At the same time, event-locked modulation of skin impedance can mimic phase and/or frequency locked modulations. Events might even be endogenous, e.g.\ heart beats~\citep{Noury_2016}.
-This suggests that transient and event-locked modulations in frequency and phase matching to the \gls{tacs} can make the  distinction between artifact and neurophysiological effect  difficult or impossible.
+This suggests that transient and event-locked modulations in frequency and phase matching to the \gls{tacs} can make the  distinction between artifact and neurophysiological effect difficult or impossible.
+
+\subsection{Conclusion}
+
+We note that all filters were able to recover the signal~\figref{fig:ecgR2}, and that the causal uniform filter is comparable to computationally more complex approaches~\secref{sec:discussPerformance}.
+
+This suggests its utility for environments with limited computational power, or for parallel application on multiple channels.
+Furthermore, being a purely causal filter, it can achieve online performance at high speed and with minimal delay.
+
+Finally, note that comb filters are purely periodic with no assumptions about the shape of the artifact. Comb filters might therefore be useful for filtering of deliberately non-sinusoidal, e.g.\ pulsed~\citep{Jaberzadeh_2015} or misshaped~\citep{Cole_2017} transcranial current stimulation.
 
 \bibliographystyle{apalike-oadoi}
 \bibliography{sample}

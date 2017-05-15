@@ -184,10 +184,22 @@ for fidx = 1 : size(F,1)
         h2 = plot(squeeze(Efun(F(fidx,:,toi),2))','linewidth',2,'color',blue);
     end
     set(gca,'xlim',[1 length(toi)],'xtick',[1:50:4000],'xticklabel',[(-length(toi)/2+1):50:length(toi)/2])
-    set(gca,'ylim',[-20 20],'ytick',[-1000:10:1000])
+    set(gca,'ylim',[-12 20],'ytick',[-1000:10:1000])
     title(filter_names{fidx})   
-    print(gcf,[printfolder,'eva\ecg_td_',filter_names{fidx},'.png'],'-dpng')
+    if fidx == 1,
+        h = legend([h2,h1,h3],'Artifact Removed','Clean Recording','95% CI');
+        set(h,'position',[0.16 .81 .08 .08])
+    end
+    if fidx == 1 || fidx == 5,
+        ylabel('µV')
+    end
+    %xlabel('Time in ms')
+    savename = filter_names{fidx};
+    savename(regexp(savename,' ')) = '_';
+    print(gcf,[printfolder,'eva\ecg_td_',savename,'.png'],'-dpng')
 end
+
+
 
 
 %%%%%
@@ -316,20 +328,23 @@ for trl_idx = 1 : 100
     f                                       = artacs.kernel.run(r,NumberPeriods,tacsFreq,Fs,'causal','gauss','default','default');
     [R(4,trl_idx),F(4,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
 
-    f                                       = artacs.kernel.run(r,NumberPeriods,tacsFreq,Fs,'symmetric','uniform','default','default');
+    f                                       = artacs.kernel.run(r,NumberPeriods,tacsFreq,Fs,'symmetric','automatic','default','default');
     [R(5,trl_idx),F(5,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
+    
+    f                                       = artacs.kernel.run(r,NumberPeriods,tacsFreq,Fs,'symmetric','uniform','default','default');
+    [R(6,trl_idx),F(6,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);        
 
     freqharm                                = [1:4]*tacsFreq;
     f                                       = artacs.dft.causal(r,freqharm,Fs,NumberPeriods);                  
-    [R(6,trl_idx),F(6,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
+    [R(7,trl_idx),F(7,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
 
     f                                       = artacs.template.stepwise(r,tacsFreq,Fs,'random');
-    [R(7,trl_idx),F(7,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
+    [R(8,trl_idx),F(8,trl_idx,:)]           = utils.regain(f,E,toi,blperiod);
 end
 
 
 
-filter_names        = {'Causal Uniform','Causal Linear','Causal Exponential','Causal Gaussian','Symmetric Uniform','Causal DFT','Adaptive PCA','Stim-free Bootstrap'};
+filter_names        = {'Causal Uniform','Causal Linear','Causal Exponential','Causal Gaussian','Symmetric Uniform','Symmetric Automatic','Causal Complex','Adaptive pPCA','Stim-free Bootstrap'};
 Efun                = @(x,prm)mean(x,prm);
 
 close all
@@ -343,7 +358,9 @@ for fidx = 1 : size(F,1)
     set(gca,'xlim',[1 length(toi)],'xtick',[1:50:4000],'xticklabel',[(-length(toi)/2+1):50:length(toi)/2])
     set(gca,'ylim',[-3 3],'ytick',[-3:1:3])
     title(filter_names{fidx})   
-    print(gcf,[printfolder,'eva\sim_td_',filter_names{fidx},'.png'],'-dpng')
+    savename = filter_names{fidx};
+    savename(regexp(savename,' ')) = '_';
+    print(gcf,[printfolder,'eva\sim_td_',savename,'.png'],'-dpng')
 end
 
 
