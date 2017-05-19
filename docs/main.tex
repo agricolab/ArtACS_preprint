@@ -15,7 +15,8 @@
 \newcommand{\figref}[1]{(see figure~\ref{#1})}
 \newcommand{\secref}[1]{(see~\ref{#1})}
 
-%\usepackage[sfdefault,lf]{carlito}
+\usepackage[sfdefault,lf]{carlito}
+
 %% The 'lf' option for lining figuressy
 %% The 'sfdefault' option to make the base font sans serif
 \usepackage[parfill]{parskip}
@@ -41,7 +42,7 @@
 \fancyhead[L]{Posted: \today}
 %\fancyhead[R]{\includegraphics[width=4cm]{img/engrXiv_banner.png}}
 \pagestyle{plain}
-\title{Causal Comb Filters for Removal of the Non-Stationary and Non-Sinusoidal Transcranial Alternating Current Stimulation Artifact}
+\title{Causal Comb Filters for Removal of Non-Stationary and Non-Sinusoidal Transcranial Alternating Current Stimulation Artifacts}
 \author[1,*]{Robert Guggenberger}
 \author[1]{N.N.}
 \affil[1]{Department for Translational Neurosurgery, University Hospital Tübingen}
@@ -73,7 +74,14 @@
 \thispagestyle{fancy}
 
 \begin{abstract}
-Your abstract.
+We present motivation and justification for weighted causal comb filters with the goal to remove non-stationary and non-sinusoidal artifacts of transcranial alternating current stimulation from electrophysiological recordings.
+We evaluate predefined (uniform, linear, exponential, gaussian) or empirical (periodic autocorrelation) weighting functions, and contrast them with symmetric uniform comb filters, discrete Fourier filters and periodic principal component removal.
+Evaluation is performed using simulated data and electrophysiological recordings certain to show no physiological modulation by the stimulation, i.e. R-peaks recorded from the upper left arm.
+We found that all approaches were similarily able to recover the signal. Noteworthy for real-time environments with limited computational power is that the causal uniform filter is comparable to computationally more complex approaches.
+Yet, note the issue of echos, which can only partially be countered by~\emph{convex} weights and limit the applicablity of comb filters to physiological signals with a duration less than one period of the artifact.
+Finally, note that comb filters are purely periodic with no assumptions about the shape of the artifact. Comb filters might therefore be useful for filtering of deliberately non-sinusoidal transcranial current stimulation.
+The filters were implemented as module for Matlab 2016b. The code can be accessed online at \url{https://github.com/agricolab/ARtACS} under a X11-license.
+
 \end{abstract}
 
 \section{Introduction}
@@ -96,12 +104,14 @@ As a recording can exhibit an amplitude modulation of the stimulation artifact w
 It has also been suggested that the closed-loop current control process within the stimulator might be a further source of amplitude modulation~\citep{Neuling_2017}.
 Additionally, the amplitude has been reported to by modulated by heart-beat and respiration~\citep{Noury_2016}. Event-related modulation of skin impedance can also affect the scalp conductance at stimulation electrodes.
 
-In conclusion, recovering the true signal from the artifacted recording is technically challenging primarily because of such non-stationarities in the artifacts amplitude.
-
 \subsection{Artifact Distortion}
 
 Ideally, the stimulation artifict of~\gls{tacs} resembles a sinusoid. But practical experience suggests that the signal is often distorted to various degrees.
 Figure~\ref{fig:nonsinus} shows examples of distortion and saturation in two recordings of \gls{tacs}. The gray traces indicate nine invididual artifact periods, while the red trace indicates their average. In figure~\ref{fig:distortion}, note the periodic, yet non-sinusoidal waveform. In figure~\ref{fig:saturation}, note the saturation.
+
+The temporally and spatially uneven impedance distribution has been suggested as cause of distortion.
+Additionally, non-linearites in the amplifier slew rate can distort the shape when the signal is close to the saturation threshold.
+But a major source of possible distortion can be  amplifier saturation, i.e.\ the stimulation artifact exhibiting an amplitude to large for the dynamic range of the amplifier, causing the signal to be cut off. As information is lost, it is impossible to recover signals during periods of saturation.
 
 \begin{figure}[hbtp]
     \begin{subfigure}{1\textwidth}
@@ -121,10 +131,6 @@ Figure~\ref{fig:nonsinus} shows examples of distortion and saturation in two rec
     \caption{Exemplary Recordings highlight Distortion and Non-Stationarity}\label{fig:nonsinus}
 \end{figure}
 
-The temporally and spatially uneven impedance distribution has been suggested as cause of distortion.
-Additionally, non-linearites in the amplifier slew rate can distort the shape when the signal is close to the saturation threshold.
-But a major source of possible distortion can be  amplifier saturation, i.e.\ the stimulation artifact exhibiting an amplitude to large for the dynamic range of the amplifier, causing the signal to be cut off. As information is lost, it is impossible to recover signals during periods of saturation.
-
 \subsection{Computational Demands}
 
 Methods based on adaptive template construction and \gls{tpca}~\citep{Niazy_2005} have been explored for removal of  non-stationary and misshaped \gls{tacs} artifacts~\citep{Helfrich_2014}.
@@ -133,9 +139,8 @@ Such a multi-staged template-approach is therefore of limited utility for on-lin
 
 \subsection{Motivation}
 
-We were interested in development of a computationally fast approach, feasible for online artifact removal in a single channel, and usable in embedded systems with limited computational power.
-The approach was required to account for the dynamical modulation of the artifact amplitude, and the possibility of non-sinusoidal distortion and saturation.
-Nonetheless, we wanted to develop an approach for offline-analysis, to be usable for already recorded datasets and for the purpose of evaluation and comparison.
+In conclusion, recovering the true signal from an artifacted recording is technically challenging because the artifact is non-stationary, non-sinusoidal and might exhibit a complex topography. We were interested in development of a computationally fast approach, feasible for online artifact removal in a single channel, and usable in embedded systems with limited computational power.
+Nonetheless, the implementation was desired to be feasible for offline-analysis. First, to be usable for already recorded datasets and second, to allow reproducible evaluation and comparison with other techniques.
 
 \section{Approach}
 
@@ -278,11 +283,9 @@ If the trial duration is significantly larger than the duration of the physiolog
 The major components will catch the shape components of the artifact, their amplitude modulation over time, and if present, any phase-lag induced by clock asynchrony between stimulator and recording devices. Removing the largest principal components will therefore be more likely to reduce the power of the artifact, and not of the signal.
 Removal of the largest component derived using main~\gls{ppca} can be performed iteratively until a specific condition is achieved. We implemented such an iterative approach by removing components until the power in the artifacts main frequency was reduced below the level of nearby, non-artifacted frequencies.
 
-\subsection{Implementation}
-
+\section{Evaluation}
 We implemented all of the discussed approaches for kernel creation and artifact removal in Matlab 2016b. The code can be accessed online~\footnote{\url{https://github.com/agricolab/ARtACS}},free and open source, and has been licensed under a X11-license.
 
-\section{Evaluation}
 We selected several kernel approaches and evaluated their frequency response characteristics~(see~\ref{sec:EvaluationFreq}). Additonally,we evaluated their performance in comparison also to alternative approaches on simulated~(see~\ref{sec:EvaluationSimulated}) and real data~(see~\ref{sec:EvaluationData}).
 
 \subsection{Evaluation of Frequency Response}\label{sec:EvaluationFreq}
@@ -475,10 +478,9 @@ This suggests that transient and event-locked modulations in frequency and phase
 
 \subsection{Conclusion}
 
-We note that all filters were able to recover the signal~\figref{fig:ecgR2}, and that the causal uniform filter is comparable to computationally more complex approaches~\secref{sec:discussPerformance}.
+We note that all filters were able to recover the signal~\figref{fig:ecgR2}, and that the causal uniform filter is comparable to computationally more complex approaches~\secref{sec:discussPerformance}. Pure causal filters with predefined weights can achieve online performance at high speed and with minimal This suggests their utility for environments with limited computational power.
 
-This suggests its utility for environments with limited computational power, or for parallel application on multiple channels.
-Furthermore, being a purely causal filter, it can achieve online performance at high speed and with minimal delay.
+Yet, note that all comb filters exhibit echos, which  can only partially be countered by~\emph{convex} weights. This might limit the applicablity of comb filters to physiological signals with a duration less than one period of the artifact.
 
 Finally, note that comb filters are purely periodic with no assumptions about the shape of the artifact. Comb filters might therefore be useful for filtering of deliberately non-sinusoidal, e.g.\ pulsed~\citep{Jaberzadeh_2015} or misshaped~\citep{Cole_2017} transcranial current stimulation.
 
