@@ -44,6 +44,7 @@
 \pagestyle{plain}
 \title{Causal Comb Filters for Removal of Non-Stationary and Non-Sinusoidal Transcranial Alternating Current Stimulation Artifacts}
 \author[1,*]{Robert Guggenberger}
+\author[1]{Alireza Gharabaghi}
 \author[1]{N.N.}
 \affil[1]{Department for Translational Neurosurgery, University Hospital Tübingen}
 
@@ -78,9 +79,9 @@ We present motivation and justification for weighted causal comb filters with th
 We evaluate predefined (uniform, linear, exponential, gaussian) or empirical (periodic autocorrelation) weighting functions, and contrast them with symmetric uniform comb filters, discrete Fourier filters and periodic principal component removal.
 Evaluation is performed using simulated data and electrophysiological recordings certain to show no physiological modulation by the stimulation, i.e. R-peaks recorded from the upper left arm.
 We found that all approaches were similarily able to recover the signal. Noteworthy for real-time environments with limited computational power is that the causal uniform filter is comparable to computationally more complex approaches.
-Yet, note the issue of echos, which can only partially be countered by~\emph{convex} weights and limit the applicablity of comb filters to physiological signals with a duration less than one period of the artifact.
+Yet, note the issue of echos, which can only partially be countered by~\emph{concave} weights and limit the applicablity of comb filters to physiological signals with a duration less than one period of the artifact.
 Finally, note that comb filters are purely periodic with no assumptions about the shape of the artifact. Comb filters might therefore be useful for filtering of deliberately non-sinusoidal transcranial current stimulation.
-The filters were implemented as module for Matlab 2016b. The code can be accessed online at \url{https://github.com/agricolab/ARtACS} under a X11-license.
+The filters were implemented as module for Matlab 2016b. The code can be accessed online at \url{https://github.com/agricolab/ARtACS} under a X11-license~\citep{Guggenberger2017}.
 
 \end{abstract}
 
@@ -284,7 +285,7 @@ The major components will catch the shape components of the artifact, their ampl
 Removal of the largest component derived using main~\gls{ppca} can be performed iteratively until a specific condition is achieved. We implemented such an iterative approach by removing components until the power in the artifacts main frequency was reduced below the level of nearby, non-artifacted frequencies.
 
 \section{Evaluation}
-We implemented all of the discussed approaches for kernel creation and artifact removal in Matlab 2016b. The code can be accessed online~\footnote{\url{https://github.com/agricolab/ARtACS}},free and open source, and has been licensed under a X11-license.
+We implemented all of the discussed approaches for kernel creation and artifact removal in Matlab 2016b. The code can be accessed online~\footnote{\url{https://github.com/agricolab/ARtACS}}, is free and open source, and has a X11-license.
 
 We selected several kernel approaches and evaluated their frequency response characteristics~(see~\ref{sec:EvaluationFreq}). Additonally,we evaluated their performance in comparison also to alternative approaches on simulated~(see~\ref{sec:EvaluationSimulated}) and real data~(see~\ref{sec:EvaluationData}).
 
@@ -339,7 +340,7 @@ Note also that for all decreasing weight functions, very high $\tau$ would retur
 To evaluate the filters, we tested them on simulated signals. The simulated signal was created as superposition of a 10 Hz \gls{tacs}-artifact, and an \gls{erp}.
 The \gls{erp} was simulated as the gradient of a flat top window. The amplitude of the artifact was simulated as a distorted, non-stationary sinusoidal.
 The initial stimulation signal was modelled as sinusoidal signal. We distorted it by adding periodic white noise. Additionally, the stimulation amplitude was driven by an Ornstein–Uhlenbeck process with a stiffness 0.5, and a Hanning window time-locked to the event-related potential.
-In that way, we were able to simulate event-independent modulations of the artifacts amplitude, and modulations locked to an event.~\footnote{Code for signal generation is included in the toolbox at \url{https://github.com/agricolab/ARtACS}}
+In that way, we were able to simulate event-independent modulations of the artifacts amplitude, and modulations locked to an event.~\footnote{Code for signal generation is included in the toolbox}
 Such effects were described by \citep{Noury_2016}, as having a strong potential to mask the true event-related neurophysiological activity.
 
 \begin{figure}[hbtp]
@@ -363,7 +364,7 @@ Such effects were described by \citep{Noury_2016}, as having a strong potential 
     \caption{Overview for Artifact Removal from  Simulated Signal suggests sufficient Performance}
 \end{figure}
 
-We simulated 100 trials with a length of 8000 samples. Subsequently, we explored different filters for 10 Hz, all with a period number of 10. The causal DFT filter was applied recursively not only at 10, but also at 20, 30, and 40 Hz to reduce harmonics.
+We simulated 100 trials with a length of 8000 samples. Subsequently, we explored different filters for 10 Hz, all with a period number of 10. The causal complex filter was applied recursively not only at 10, but also at 20, 30, and 40 Hz to reduce harmonics.
 
 Based on  the correlation of the filtered, artifacted recording with the known shape of the simulated~\gls{erp}, we calculated the R² value. Blue bars indicate the average R² for single-trial reconstructions, and red bars the average R² for boot-strapped grand-average~\gls{erp}s~\figref{fig:simR2}. Visual inspection of the R² estimates shows that all filtering approaches are able to recover at least some information about the~\gls{erp}. Differences between the comb filters is small.
 
@@ -372,7 +373,7 @@ Based on  the correlation of the filtered, artifacted recording with the known s
 To evaluate the filters further, we tested them on real physiological signals. Consider that~\gls{tacs} can have physiological effects on cortical~\gls{erp}. To properly evaluate the recovery using the filtering approaches, we needed a physiological signal unlikely to be affected by~\gls{tacs}.
 
 We therefore measured~\gls{ecg} at the flexor digitorum of the left upper limb, while we stimulated distal and proximal with~\gls{tacs} to the recording electrodes~\figref{fig:ecg_setup}. We also recorded~\gls{ecg} at the chest, and detected the R-peak for epoching the data. Please note that no~\gls{tacs}-artifact was visible in the chest~\gls{ecg}.
-Physiological signals were acquired using BrainProducts amplifiers at a sampling rate of 1 kHz and low-pass filtered below 35 Hz. Stimulation as delivered using a NeuroConn DC Stimulator Plus with carbon rubber electrodes and Ten20 electrode gel with an intensity of 1 mA at a frequency of 11 Hz.
+Physiological signals were acquired using BrainProducts amplifiers at a sampling rate of 1 kHz and low-pass filtered below 35 Hz. Stimulation was delivered using a NeuroConn DC Stimulator Plus with carbon rubber electrodes and Ten20 electrode gel with an intensity of 1 mA at a frequency of 11 Hz.
 
 \begin{figure}[hbtp]
     \begin{subfigure}{.245\textwidth}
@@ -411,7 +412,7 @@ Yet, different weighting functions exhibit different pass-band performance, whic
 
 For real and simulated datasets, all approaches were able to recover the signal. Contrasting their performance on simulated~\secref{sec:EvaluationSimulated} or real data~\secref{sec:EvaluationData}, we found generally quite similar profiles.
 
-All comb filters performed very similar, but it should be noted that the weighted filters exhibited slightly average lower R² values in both settings and a slightly more skewed distribution for real data~\figref{fig:ecgR2}. This might be linked to distortion by echos~\secref{sec:discussEcho} or insufficient artifact removal in a few trials.
+All comb filters performed very similar, but it should be noted that the weighted filters exhibited slightly average lower R² values in both settings and a slightly more skewed distribution for real data~\figref{fig:ecgR2}. This is most prominent for the complex filter assuming suinusoidality. It might be linked to distortion by echos~\secref{sec:discussEcho}, or insufficient artifact removal in a few trials.
 The causal complex filter performed worst, although we filtered not only the main frequency of the artifact, but also the harmonical frequencies. This is most likely caused by the non-sinusoidality of the artifact.
 
 Most interestingly, the causal uniform filter performed on par with the symmetric filters, regardless of whether these were weighted uniform or based on the autocorrelation. This suggests that the causal uniform filter can be highly effective, in spite of its low computational complexity,
@@ -458,7 +459,7 @@ A key disadvantage of comb filters is that while they subtract the artifacts, an
     \caption{Overview of Reconstruction in the time domain highlights possibility of echos}\label{fig:td_echo}
 \end{figure}
 
-This means that strong weights close to the kernels center might increase the precision of the artifact amplitude estimate, but can also induce unwanted and strong echos  close to the occurence of a physiologically interesting event~\label{fig:td_echo}.
+This means that strong weights close to the kernels center might increase the accuracy of the artifact amplitude estimate, but induce unwanted and strong echos close to the occurence of a physiologically interesting event~\figref{fig:td_echo}.
 
 Additionally, if the duration of the physiological signal is longer than the period of the kernel, the signal will be distorted by the echo.
 This could be addressed by~\emph{delaying} the kernel, i.e.\ kernels with zero weights for a number of periods before their estimation weights start, or~\emph{inverting} the kernels, i.e.\ kernels with increasing instead of decreasing weights with increasing delay, or applying causal filters~\emph{piece-wise} left and right of the signal.
@@ -480,7 +481,7 @@ This suggests that transient and event-locked modulations in frequency and phase
 
 We note that all filters were able to recover the signal~\figref{fig:ecgR2}, and that the causal uniform filter is comparable to computationally more complex approaches~\secref{sec:discussPerformance}. Pure causal filters with predefined weights can achieve online performance at high speed and with minimal This suggests their utility for environments with limited computational power.
 
-Yet, note that all comb filters exhibit echos, which  can only partially be countered by~\emph{convex} weights. This might limit the applicablity of comb filters to physiological signals with a duration less than one period of the artifact.
+Yet, note that all comb filters exhibit echos, which  can only partially be countered by~\emph{concave} weights. This might limit the applicablity of comb filters to physiological signals with a duration less than one period of the artifact.
 
 Finally, note that comb filters are purely periodic with no assumptions about the shape of the artifact. Comb filters might therefore be useful for filtering of deliberately non-sinusoidal, e.g.\ pulsed~\citep{Jaberzadeh_2015} or misshaped~\citep{Cole_2017} transcranial current stimulation.
 
